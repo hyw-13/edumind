@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Outfit', system-ui, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #1c1917;
+  background-color: #faf7f2;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  border-color: #e7e5e4;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #faf7f2;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(15, 118, 110, 0.06) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(234, 88, 12, 0.04) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(225, 29, 72, 0.03) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Display headings */
+.font-display {
+  font-family: 'Fraunces', Georgia, serif;
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 96, 'SOFT' 50;
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbar — 更纤细优雅 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+  background-clip: content-box;
+}
+
+/* Selection */
+::selection {
+  background: rgba(15, 118, 110, 0.18);
+  color: #134e4a;
+}
+
+/* Streaming caret */
+.stream-caret::after {
+  content: '▍';
+  display: inline-block;
+  margin-left: 1px;
+  color: #0f766e;
+  animation: blink 1s step-end infinite;
+}
+
+/* Shimmer skeleton */
+.shimmer {
+  background: linear-gradient(90deg, #efe9dd 25%, #f5f0e8 37%, #efe9dd 63%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* Neural pattern overlay */
+.neural-bg {
+  background-image:
+    linear-gradient(rgba(15, 118, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Card base — 加 transition 使 hover 更平滑 */
+.card {
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 4px 16px rgba(28, 25, 23, 0.05);
+  transition: box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s ease,
+              transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Markdown content */
+.md h1, .md h2, .md h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1c1917;
+  margin-top: 1.4em;
+  margin-bottom: 0.6em;
+  line-height: 1.25;
+}
+.md h1 { font-size: 1.6rem; }
+.md h2 { font-size: 1.3rem; }
+.md h3 { font-size: 1.1rem; }
+.md p { margin: 0.7em 0; color: #44403c; }
+.md ul, .md ol { margin: 0.7em 0; padding-left: 1.4em; color: #44403c; }
+.md li { margin: 0.25em 0; }
+.md ul li { list-style: disc; }
+.md ol li { list-style: decimal; }
+.md strong { color: #1c1917; font-weight: 600; }
+.md code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: #f5f0e8;
+  padding: 0.15em 0.4em;
+  border-radius: 0.35rem;
+  color: #115e59;
+}
+.md pre {
+  background: #1c1917;
+  color: #f5f0e8;
+  padding: 1rem 1.2rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 0.9em 0;
+}
+.md pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.85rem;
+}
+.md blockquote {
+  border-left: 3px solid #0f766e;
+  padding-left: 1rem;
+  margin: 0.9em 0;
+  color: #78716c;
+  font-style: italic;
+}
+.md a { color: #0f766e; text-decoration: underline; text-underline-offset: 2px; }
+.md table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+.md th, .md td { border: 1px solid #e7e5e4; padding: 0.5em 0.75em; text-align: left; }
+.md th { background: #f5f0e8; font-weight: 600; color: #1c1917; }

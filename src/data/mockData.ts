@@ -1,0 +1,437 @@
+// 智学伴 EduMind - Mock 数据与类型定义
+// 所有内容均基于《人工智能导论》知识库 (knowledgeBase.ts) 真实章节
+
+import { knowledgeStats } from './knowledgeBase';
+
+export type ResourceType = 'doc' | 'mindmap' | 'quiz' | 'reading' | 'code';
+
+export interface Profile {
+  knowledgeBase: number;
+  cognitiveStyle: number;
+  learningGoal: number;
+  errorPattern: number;
+  learningPace: number;
+  interest: number;
+  background: number;
+  history: number;
+}
+
+export const profileDimensions: { key: keyof Profile; label: string; desc: string }[] = [
+  { key: 'knowledgeBase', label: '知识基础', desc: '前置课程与数学/编程掌握度' },
+  { key: 'cognitiveStyle', label: '认知风格', desc: '视觉/听觉/动手/阅读型偏好' },
+  { key: 'learningGoal', label: '学习目标', desc: '考研/就业/科研/兴趣方向' },
+  { key: 'errorPattern', label: '易错点偏好', desc: '历史错题模式与薄弱环节' },
+  { key: 'learningPace', label: '学习节奏', desc: '吸收速度与单次学习时长' },
+  { key: 'interest', label: '兴趣方向', desc: 'CV/NLP/RL/系统等领域倾向' },
+  { key: 'background', label: '专业背景', desc: '专业、年级与学历层次' },
+  { key: 'history', label: '学习历史', desc: '已学章节与完成度记录' },
+];
+
+export const initialProfile: Profile = {
+  knowledgeBase: 62,
+  cognitiveStyle: 78,
+  learningGoal: 85,
+  errorPattern: 45,
+  learningPace: 70,
+  interest: 88,
+  background: 72,
+  history: 58,
+};
+
+// 智能体定义
+export interface AgentInfo {
+  id: string;
+  name: string;
+  role: string;
+  status: 'online' | 'busy' | 'idle';
+  lastTask: string;
+  icon: string;
+}
+
+export const agents: AgentInfo[] = [
+  { id: 'orchestrator', name: '总协调智能体', role: '任务拆解与调度', status: 'online', lastTask: '调度「深度学习」章节资源生成', icon: 'Network' },
+  { id: 'profile', name: '画像构建智能体', role: '对话抽取学生特征', status: 'idle', lastTask: '完成画像第 4 轮对话更新', icon: 'UserSearch' },
+  { id: 'doc', name: '文档生成智能体', role: '课程讲解与拓展阅读', status: 'busy', lastTask: '生成《Transformer 架构详解》讲义', icon: 'FileText' },
+  { id: 'mindmap', name: '思维导图智能体', role: '知识结构可视化', status: 'online', lastTask: '构建「AI 发展史」时间线导图', icon: 'GitBranch' },
+  { id: 'quiz', name: '题库生成智能体', role: '多题型练习生成', status: 'online', lastTask: '生成「A* 搜索算法」10 道练习', icon: 'ListChecks' },
+  { id: 'code', name: '代码案例智能体', role: '实操案例与项目', status: 'busy', lastTask: '编写决策树 ID3/C4.5/CART Notebook', icon: 'Code2' },
+  { id: 'path', name: '路径规划智能体', role: '动态学习路径', status: 'idle', lastTask: '调整路径，插入「知识图谱」复习节点', icon: 'Route' },
+  { id: 'tutor', name: '答疑智能体', role: '即时多模态答疑', status: 'online', lastTask: '解答「Transformer 自注意力」疑问', icon: 'MessageCircleQuestion' },
+];
+
+// 学习概览
+export const learningOverview = {
+  totalProgress: 58,
+  weeklyHours: 12.5,
+  streakDays: 14,
+  masteredTopics: 9,
+  totalTopics: knowledgeStats.totalPoints,
+  weeklyGoal: 15,
+};
+
+// 今日推荐
+export interface Recommendation {
+  id: string;
+  resourceId: string;
+  type: ResourceType;
+  title: string;
+  chapter: string;
+  reason: string;
+  duration: string;
+}
+
+export const recommendations: Recommendation[] = [
+  { id: 'r1', resourceId: 'res6', type: 'reading', title: 'Transformer 论文精读：Attention is All You Need', chapter: '核心技术 · NLP', reason: '你的兴趣方向偏 NLP，且即将进入「大语言模型」节点', duration: '约 30 分钟' },
+  { id: 'r2', resourceId: 'res3', type: 'quiz', title: 'A* 搜索算法专项练习（10题）', chapter: '核心技术 · 搜索技术', reason: '上次「搜索技术」节点正确率 58%，建议巩固', duration: '10 道题' },
+  { id: 'r3', resourceId: 'res5', type: 'code', title: '决策树 ID3/C4.5/CART 实战', chapter: '核心技术 · 机器学习', reason: '「机器学习」节点进度 80%，推荐完成代码实战巩固', duration: '约 25 分钟' },
+];
+
+// 最近学习
+export const recentLearning: { id: string; type: ResourceType; title: string; chapter: string; progress: number; updatedAt: string }[] = [
+  { id: 're1', type: 'code', title: '决策树 ID3/C4.5/CART 实战', chapter: '核心技术 · 机器学习', progress: 80, updatedAt: '2 小时前' },
+  { id: 're2', type: 'doc', title: '达特茅斯会议与 AI 的诞生', chapter: '发展历史 · 诞生期', progress: 100, updatedAt: '昨天' },
+  { id: 're3', type: 'mindmap', title: 'AI 70 年发展史时间线', chapter: '发展历史 · 全景', progress: 45, updatedAt: '昨天' },
+  { id: 're4', type: 'doc', title: '卷积神经网络原理详解', chapter: '核心技术 · 计算机视觉', progress: 60, updatedAt: '3 天前' },
+];
+
+// 资源
+export interface Resource {
+  id: string;
+  type: ResourceType;
+  title: string;
+  chapter: string;
+  summary: string;
+  difficulty: '入门' | '进阶' | '高阶';
+  createdAt: string;
+  duration?: string;
+  content: string;
+  quizId?: string;        // 关联结构化题目（仅 quiz 类型）
+}
+
+export const resourceTypeMeta: Record<ResourceType, { label: string; icon: string; color: string; bg: string }> = {
+  doc: { label: '讲解文档', icon: 'FileText', color: 'text-teal', bg: 'bg-teal-pale' },
+  mindmap: { label: '思维导图', icon: 'GitBranch', color: 'text-amber', bg: 'bg-amber-pale' },
+  quiz: { label: '练习题库', icon: 'ListChecks', color: 'text-rose', bg: 'bg-rose-pale' },
+  reading: { label: '拓展阅读', icon: 'BookOpen', color: 'text-teal-dark', bg: 'bg-paper-soft' },
+  code: { label: '代码案例', icon: 'Code2', color: 'text-teal', bg: 'bg-teal-pale' },
+};
+
+export const resources: Resource[] = [
+  {
+    id: 'res1', type: 'doc', title: '人工智能三大流派解析',
+    chapter: '基础概念 · 三大研究流派', summary: '深入对比符号主义、连接主义、行为主义三大流派的哲学基础、代表方法、代表人物与优缺点，结合三派融合趋势理解 AI 学科的思想脉络与发展走向。',
+    difficulty: '入门', createdAt: '今天 14:20', duration: '约 18 分钟',
+    content: `# 人工智能三大流派解析\n\n人工智能 70 年发展史上形成了**三大研究流派**，分别从不同哲学立场理解智能的本质。理解这三派的思想差异，是把握 AI 学科演进逻辑的钥匙。\n\n## 一、符号主义（Symbolism）\n\n又称**逻辑主义**或**心理学派**，认为智能的基础是**符号操作**。这是 AI 诞生初期最具影响力的流派，长期主导早期研究。\n\n### 哲学基础\n- **认知即计算**（Cognition = Computation）：心智可视为符号操作的系统\n- **物理符号系统假设**（Newell & Simon, 1976）：任何物理符号系统都具备产生通用智能行为的充分条件，反之亦然\n- 受莱布尼茨"普遍演算"、弗雷格"概念文字"等思想影响\n\n### 代表方法\n- 专家系统（MYCIN 医疗诊断、XCON 计算机配置）\n- 知识图谱（Google Knowledge Graph、 Wikidata）\n- 自动定理证明（几何定理证明器、Boyer-Moore 定理证明器）\n- 逻辑编程（Prolog 语言、Datalog）\n- 框架与语义网络\n\n### 代表人物\n| 人物 | 主要贡献 |\n|------|----------|\n| Newell & Simon | 通用问题求解器 GPS、物理符号系统假设 |\n| McCarthy | Lisp 语言、情境演算 |\n| Feigenbaum | 专家系统之父，MYCIN 顾问 |\n\n### 优缺点\n| 优势 | 劣势 |\n|------|------|\n| 可解释性强 | 难以处理模糊与感知问题 |\n| 推理过程透明 | 知识获取瓶颈 |\n| 与人类逻辑思维契合 | 难以应对噪声与不确定性 |\n\n## 二、连接主义（Connectionism）\n\n又称**神经网络学派**，认为智能源于**大量简单单元的相互连接**。该流派经历了"三起两落"的曲折发展，最终在 2012 年后成为 AI 主流。\n\n### 核心思想\n- **仿生学**：模拟生物神经元（M-P 模型）\n- **分布式表征**与并行处理\n- **学习即权重调整**：通过误差反向传播优化连接\n\n### 发展脉络\n- 1943 M-P 模型（McCulloch & Pitts）→ 1957 感知机（Rosenblatt）→ 1969 Minsky 批判 XOR → 1986 反向传播（Rumelhart 等）→ 1998 LeNet → 2012 AlexNet → 2017 Transformer → 2022 ChatGPT\n\n### 代表方法\n- 多层感知机 MLP\n- 卷积神经网络 CNN（LeNet、AlexNet、ResNet）\n- 循环神经网络 RNN（LSTM、GRU）\n- Transformer / 大语言模型（GPT、BERT、LLaMA）\n- 生成模型（GAN、Diffusion）\n\n### 优缺点\n| 优势 | 劣势 |\n|------|------|\n| 擅长感知与模式识别 | 可解释性弱（黑箱） |\n| 端到端学习 | 数据饥渴、算力依赖 |\n| 可处理模糊与噪声 | 缺乏显式推理能力 |\n\n## 三、行为主义（Actionism）\n\n又称**进化主义**或**控制论学派**，认为智能源于**智能体与环境的交互**。该流派受维纳控制论影响，强调反馈与适应。\n\n### 核心思想\n- 智能涌现于环境交互，无需内部世界模型\n- **感知-行动**反馈机制\n- "世界是它最好的模型"（Brooks）\n\n### 代表方法\n- Brooks 包容式架构机器人（Roomba 鼻祖）\n- **强化学习**（Q-Learning、SARSA、PPO、SAC）\n- 进化算法（遗传算法、进化策略 NEAT）\n- **具身智能**（RT-2、π0、Figure 01）\n- 仿生机器人（波士顿动力 Atlas）\n\n### 优缺点\n| 优势 | 劣势 |\n|------|------|\n| 适应动态环境 | 高阶认知建模困难 |\n| 在线学习、持续进化 | 训练样本效率低 |\n| 与机器人天然契合 | 奖励设计困难 |\n\n## 四、三派融合趋势\n\n当代 AI 已走向融合，单一范式难以解决复杂问题：\n- **神经符号 AI**（Neuro-Symbolic）：连接主义负责感知，符号主义负责推理，如 DeepProbLog、Neural Theorem Provers\n- **大模型 + 工具调用**：LLM 作为推理引擎，调用符号工具（计算器、数据库、定理证明器）\n- **具身智能**：连接主义（视觉与语言模型）+ 行为主义（强化学习交互）\n- **AlphaGo/AlphaFold**：连接主义（神经网络估值）+ 行为主义（强化学习自我对弈）\n\n## 五、典型应用对照\n\n| 流派 | 典型成功案例 |\n|------|--------------|\n| 符号主义 | WolframAlpha、IBM Deep Blue |\n| 连接主义 | ChatGPT、AlphaFold、Stable Diffusion |\n| 行为主义 | AlphaGo、OpenAI Five、自动驾驶 |\n\n> 关键洞察：三大流派并非对立，而是从不同角度逼近智能的本质。未来的 AGI 路径，很可能是三派深度融合的产物——用连接主义处理感知，用符号主义保证推理可验证，用行为主义适应开放世界。`,
+  },
+  {
+    id: 'res2', type: 'mindmap', title: 'AI 70 年发展史时间线',
+    chapter: '发展历史 · 全景', summary: '从 1943 M-P 模型到 2023 多模态大模型，可视化呈现 AI 两次繁荣与两次低谷的完整脉络，含关键人物、代表事件与转折点分析。',
+    difficulty: '入门', createdAt: '今天 11:05',
+    content: `# AI 70 年发展史时间线\n\n本思维导图按时间顺序梳理 AI 70 年发展史，覆盖孕育、诞生、两起两落、爆发等关键阶段。\n\n## 孕育期（1940s-1955）\n- 1943 M-P 神经元模型（McCulloch & Pitts）：首次用数学描述神经元\n- 1946 ENIAC 诞生，电子计算机时代开启\n- 1948 维纳《控制论》出版\n- 1950 图灵测试（《Computing Machinery and Intelligence》）：提出"机器能否思考"\n- 1954 逻辑理论家程序（Logic Theorist，Newell & Simon）\n\n## 诞生与第一次繁荣（1956-1969）\n- 1956 **达特茅斯会议** → AI 学科正式诞生，McCarthy 提出 "Artificial Intelligence"\n- 1957 感知机（Rosenblatt）：首个可学习神经网络\n- 1959 几何定理证明器（Gelernter）\n- 1961 Samuel 跳棋程序：早期自我学习\n- 1965 ELIZA 聊天机器人（Weizenbaum）：模式匹配伪装理解\n- 1966 MAC 项目启动\n- 1969 Shakey 机器人（SRI）：首个可推理行动的机器人\n\n## 第一次低谷（1969-1973）\n- 1969 Minsky《Perceptrons》批判 XOR 问题，神经网络研究停滞\n- 1973 Lighthill 报告 → 英国削减 AI 经费\n- 1973 DARPA 大幅削减美国 AI 研究经费\n- 现实原因：算力不足、知识表示困难、机器翻译失败\n\n## 第二次繁荣（1980-1987）\n- 1980 专家系统商业化元年（DEC 的 XCON 年省 4000 万美元）\n- 1981 日本第五代计算机计划启动，各国跟进\n- 1982 Hopfield 网络复兴神经网络研究\n- 1986 反向传播算法普及（Rumelhart, Hinton, Williams）\n- 1987 国际神经网络大会召开\n- 符号主义高光时刻，全球专家系统超 2000 个\n\n## 第二次低谷（1987-1993）\n- 知识获取瓶颈暴露，专家系统维护成本高昂\n- Lisp 机被通用工作站取代（Symbolics、LMI 倒闭）\n- 日本第五代计算机计划未达预期\n- 1988 连接主义再次受挫\n\n## 稳步发展期（1993-2011）\n- 1995 SVM（Vapnik）：经典统计学习方法\n- 1995 LeNet 应用于手写数字识别（ATM 支票识别）\n- 1997 Deep Blue 击败 Kasparov（国际象棋）\n- 1997 LSTM（Hochreiter & Schmidhuber）：解决长程依赖\n- 1998 LeNet-5 论文发表\n- 2006 深度信念网络（Hinton）：深度学习复兴信号\n- 2009 ImageNet 数据集发布（Li Fei-Fei）\n- 2011 IBM Watson 击败人类《Jeopardy!》冠军\n\n## 爆发期（2012 至今）\n- 2012 AlexNet → 深度学习时代，ImageNet 错误率骤降\n- 2014 GAN（Goodfellow）：生成对抗网络\n- 2015 ResNet：152 层深度网络，残差连接\n- 2015 TensorFlow 开源\n- 2016 AlphaGo 击败李世石（围棋）\n- 2017 Transformer（《Attention is All You Need》）\n- 2018 BERT（Google）：预训练语言模型里程碑\n- 2019 GPT-2（OpenAI）\n- 2020 GPT-3：1750 亿参数，展现涌现能力\n- 2021 DALL·E、CLIP：多模态生成\n- 2022 ChatGPT 引爆通用对话，Stable Diffusion 开源\n- 2023 GPT-4、Gemini、Claude 多模态大模型\n- 2024 Sora 视频生成、Llama 3 开源、具身智能突破\n\n## 关键转折点分析\n\n| 转折点 | 意义 |\n|--------|------|\n| 1956 达特茅斯会议 | 学科诞生 |\n| 1969《Perceptrons》| 第一次低谷触发 |\n| 1986 反向传播普及 | 神经网络复兴 |\n| 2012 AlexNet | 深度学习时代开启 |\n| 2017 Transformer | 大模型基础架构 |\n| 2022 ChatGPT | 通用 AI 时代到来 |\n\n> 思维导图要点：AI 发展呈"螺旋上升"特征，每次低谷后都伴随更大突破。连接主义虽经历两次寒冬，最终凭借算力、数据、算法三重突破成为主流。`,
+  },
+  {
+    id: 'res3', type: 'quiz', title: 'A* 搜索算法专项练习（10题）',
+    chapter: '核心技术 · 搜索技术', summary: '系统梳理 A* 搜索算法的核心概念、关键公式与学习建议，配合 10 道结构化练习题，覆盖 BFS/DFS/UCS/A* 原理、可采纳性与一致性证明、复杂度分析与编程实现。',
+    difficulty: '进阶', createdAt: '昨天 20:13', duration: '10 道题',
+    quizId: 'quiz1',
+    content: `# A* 搜索算法 - 知识梳理\n\n本节为「A* 搜索算法」专项练习的知识导引，帮助你建立完整的概念框架后，再进入答题系统实战。\n\n## 一、核心概念\n\n### 1. 搜索问题要素\n- **状态空间**：所有可能状态的集合\n- **初始状态**、**目标状态**、**目标测试**\n- **后继函数**（后继节点 generation）：返回 (动作, 后继状态, 步骤代价)\n- **路径代价** g(n)：从初始状态到 n 的实际代价\n- **启发函数** h(n)：从 n 到目标的估计代价\n\n### 2. 无信息搜索策略\n| 策略 | 完备性 | 最优性 | 时间复杂度 | 空间复杂度 |\n|------|--------|--------|------------|------------|\n| BFS | ✓（有限 b） | ✓（等代价） | O(b^d) | O(b^d) |\n| DFS | ✗（可能陷环） | ✗ | O(b^m) | O(bm) |\n| UCS | ✓ | ✓ | O(b^(C*/ε)) | O(b^(C*/ε)) |\n| DLS | ✓（若 l≥d） | ✗ | O(b^l) | O(bl) |\n| IDS | ✓ | ✓（等代价） | O(b^d) | O(bd) |\n\n其中 b = 分支因子，d = 解的深度，m = 状态空间最大深度，C* = 最优解代价。\n\n### 3. 有信息搜索：A* 算法\nA* 结合 UCS（向后看，g(n)）与贪心最佳优先（向前看，h(n)），是启发式搜索的代表作。\n\n## 二、关键公式与定理\n\n### 1. 估值函数\n\n\`f(n) = g(n) + h(n)\`\n\n- g(n)：从初始到 n 的**实际**代价\n- h(n)：从 n 到目标的**估计**代价\n- f(n)：经过 n 的最优路径的估计总代价\n\nA* 每次从 open_set 中选取 **f(n) 最小**的节点扩展。\n\n### 2. 可采纳性（Admissibility）\n\n启发函数 h(n) 可采纳，当且仅当对所有节点 n：\n\n\`h(n) ≤ h*(n)\`\n\n其中 h*(n) 是 n 到目标的真实最小代价。\n\n> **定理**：若 h(n) 可采纳，且树搜索中，A* 保证返回最优解。\n\n### 3. 一致性（Consistency）\n\n启发函数 h(n) 一致，当且仅当对每条边 (n, n')：\n\n\`h(n) ≤ c(n, n') + h(n')\`\n\n> **定理**：一致性是比可采纳性更强的条件。在图搜索中，一致性保证每个节点仅被扩展一次，A* 仍最优。\n\n### 4. 启发函数设计\n- **曼哈顿距离**（网格、4 邻接）：忽略障碍的水平+垂直距离\n- **欧几里得距离**（连续空间）\n- **错位棋子数**（8 数码，弱启发）\n- **曼哈顿距离和**（8 数码，更强，可采纳）\n\n### 5. 复杂度\n- 时间：O(b^d)（最坏退化为 UCS，h=0 时）\n- 空间：O(b^d)，需存储所有已生成节点（最大瓶颈）\n\n## 三、相关变体\n\n| 算法 | 特点 | 适用场景 |\n|------|------|----------|\n| IDA* | 迭代加深 + A* | 内存受限 |\n| RBFS | 递归最佳优先 | 内存受限 |\n| SMA* | 简化内存受限 A* | 内存严格受限 |\n| Weighted A* | f = g + W·h, W>1 | 牺牲最优性换速度 |\n| D* Lite | 增量式 A* | 动态环境路径规划 |\n\n## 四、学习建议\n\n1. **先掌握基础**：务必熟练 BFS/DFS/UCS 的实现，理解完备性与最优性差异\n2. **理解可采纳性 vs 一致性**：这是 A* 最易混淆的考点，建议手画反例\n3. **手算练习**：选 8 数码或 15 数码，手算 A* 扩展顺序，加深对 open/close 表的理解\n4. **编程实现**：用优先队列（堆）实现 A*，注意 heapq 的元组比较\n5. **拓展阅读**：阅读 AIMA（《人工智能：一种现代方法》）第 3 章，理解 IDA* 与 SMA* 的设计动机\n6. **对比思考**：为什么 h=0 时 A* 退化为 UCS？为什么 h=h* 时 A* 直接走最优路径？\n\n## 五、典型易错点\n\n- 混淆"可采纳"与"一致"：一致一定可采纳，反之不真\n- 忘记一致性保证图搜索最优，可采纳仅保证树搜索最优\n- 实现时 open_set 用普通列表而非堆，导致效率从 O(log n) 退化到 O(n)\n- 启发函数过强（h>h*）虽快但失去最优性\n\n> 请通过下方答题系统完成 10 道练习题，答题后查看解析。题目涵盖选择、判断、简答与编程四种题型，建议先尝试闭卷作答再对照解析。`,
+  },
+  {
+    id: 'res5', type: 'code', title: '决策树 ID3/C4.5/CART 实战',
+    chapter: '核心技术 · 机器学习', summary: '基于 sklearn 实现三种决策树算法对比，含信息增益、增益率、基尼系数的手写实现、剪枝策略、可视化与超参数调优。',
+    difficulty: '进阶', createdAt: '2 小时前', duration: '约 25 分钟',
+    content: `# 决策树 ID3/C4.5/CART 实战\n\n本 Notebook 系统对比三种经典决策树算法，从手写实现到 sklearn 调用，覆盖分裂准则、剪枝、可视化与调参全流程。\n\n## 一、信息熵与信息增益（ID3 基础）\n\n### 1. 信息熵定义\n\n\`H(D) = -Σ pᵢ log₂ pᵢ\`\n\n熵越大数据越混乱，纯度越低。\n\n### 2. 信息增益手写实现\n\n\`\`\`python\nimport numpy as np\nfrom collections import Counter\n\ndef entropy(y):\n    counts = np.array(list(Counter(y).values()))\n    probs = counts / counts.sum()\n    return -np.sum(probs * np.log2(probs + 1e-12))\n\ndef info_gain(X, y, feature):\n    parent_ent = entropy(y)\n    values, counts = np.unique(X[:, feature], return_counts=True)\n    child_ent = sum((c/len(y)) * entropy(y[X[:, feature] == v])\n                    for v, c in zip(values, counts))\n    return parent_ent - child_ent\n\ndef id3(X, y, features):\n    if len(set(y)) == 1:\n        return {'leaf': y[0]}\n    if not features:\n        return {'leaf': Counter(y).most_common(1)[0][0]}\n    gains = [info_gain(X, y, f) for f in features]\n    best = features[np.argmax(gains)]\n    tree = {'feature': best, 'children': {}}\n    for v in np.unique(X[:, best]):\n        mask = X[:, best] == v\n        tree['children'][v] = id3(X[mask], y[mask],\n                                  [f for f in features if f != best])\n    return tree\n\`\`\`\n\n## 二、C4.5 增益率\n\n信息增益偏好取值多的特征（极端：ID 特征信息增益最大但无泛化）。C4.5 用**增益率**修正：\n\n\`\`\`python\ndef gain_ratio(X, y, feature):\n    g = info_gain(X, y, feature)\n    values, counts = np.unique(X[:, feature], return_counts=True)\n    iv = -np.sum((counts/len(y)) * np.log2(counts/len(y) + 1e-12))\n    return g / (iv + 1e-12)\n\`\`\`\n\n## 三、CART 基尼指数（sklearn 默认）\n\n基尼指数衡量从数据集中随机抽两个样本类别不同的概率：\n\n\`Gini(D) = 1 - Σ pᵢ²\`\n\n\`\`\`python\nfrom sklearn.tree import DecisionTreeClassifier, plot_tree\nimport matplotlib.pyplot as plt\n\nclf = DecisionTreeClassifier(criterion='gini', max_depth=4, random_state=42)\nclf.fit(X_train, y_train)\n\nplt.figure(figsize=(12, 8))\nplot_tree(clf, filled=True, feature_names=feature_names)\nplt.savefig('cart_tree.png', dpi=150, bbox_inches='tight')\n\`\`\`\n\n## 四、剪枝策略\n\n### 1. 预剪枝\n- \`max_depth\`：限制树深\n- \`min_samples_split\`：节点分裂最小样本数\n- \`min_samples_leaf\`：叶子节点最小样本数\n- \`max_leaf_nodes\`：最大叶子数\n\n### 2. 后剪枝（CCP，代价复杂度剪枝）\n\n\`\`\`python\npath = clf.cost_complexity_pruning_path(X_train, y_train)\nccp_alphas = path.ccp_alphas\n# 用交叉验证选最佳 alpha\nfor alpha in ccp_alphas:\n    clf = DecisionTreeClassifier(ccp_alpha=alpha)\n    scores = cross_val_score(clf, X_train, y_train, cv=5)\n\`\`\`\n\n## 五、回归树（CART 回归）\n\n\`\`\`python\nfrom sklearn.tree import DecisionTreeRegressor\nreg = DecisionTreeRegressor(criterion='squared_error', max_depth=5)\nreg.fit(X_train, y_reg)\n\`\`\`\n\n## 六、三大分裂准则对比\n\n| 算法 | 准则 | 适用 | 树结构 | 缺失值处理 | 剪枝 |\n|------|------|------|--------|------------|------|\n| ID3 | 信息增益 | 分类 | 多叉 | 不支持 | 不支持 |\n| C4.5 | 增益率 | 分类 | 多叉 | 支持 | 悲观剪枝 |\n| CART | 基尼/MSE | 分类+回归 | 二叉 | 不支持（原生） | CCP |\n\n## 七、超参数调优\n\n\`\`\`python\nfrom sklearn.model_selection import GridSearchCV\n\nparam_grid = {\n    'max_depth': [3, 5, 7, 10, None],\n    'min_samples_split': [2, 5, 10],\n    'min_samples_leaf': [1, 2, 4],\n    'criterion': ['gini', 'entropy']\n}\ngs = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=5, n_jobs=-1)\ngs.fit(X_train, y_train)\nprint(gs.best_params_)\n\`\`\`\n\n## 八、特征重要性分析\n\n\`\`\`python\nimportances = clf.feature_importances_\nfor name, imp in sorted(zip(feature_names, importances), key=lambda x: -x[1]):\n    print(f'{name}: {imp:.4f}')\n\`\`\`\n\n## 九、思考题\n1. 为什么信息增益偏好取值多的特征？如何用增益率修正？\n2. CART 为何强制二叉？二叉树对连续特征如何处理？\n3. 如何用交叉验证选择 max_depth？过拟合与欠拟合如何判断？\n4. 决策树为何对异常值鲁棒？对特征尺度不敏感？\n5. 随机森林如何用决策树构建？为什么能降低方差？`,
+  },
+  {
+    id: 'res6', type: 'reading', title: 'Transformer 论文精读：Attention is All You Need',
+    chapter: '核心技术 · NLP', summary: '逐节精读 2017 年 Transformer 原论文，深入理解自注意力、多头机制、位置编码、Encoder-Decoder 架构的数学本质、设计动机与训练细节，附衍生模型对比。',
+    difficulty: '高阶', createdAt: '3 天前', duration: '约 35 分钟',
+    content: `# Transformer 论文精读\n\n**论文**：*Attention is All You Need*（Vaswani et al., NeurIPS 2017，Google Brain）\n\n这是现代深度学习最重要的论文之一，奠定了大语言模型的架构基础。本文逐节精读，还原作者的设计动机。\n\n## 一、研究背景与动机\n\n2017 年之前，序列建模主要靠 RNN/LSTM：\n- **问题 1**：无法并行，训练慢\n- **问题 2**：长程依赖建模困难（即便 LSTM 也会衰减）\n- **已有尝试**：注意力机制作为 RNN 的辅助（Bahdanau Attention, 2014）\n\n作者大胆假设：**完全抛弃 RNN/CNN，仅用注意力**。\n\n## 二、核心创新：自注意力机制\n\n### 1. Scaled Dot-Product Attention\n\n\`Attention(Q, K, V) = softmax(QKᵀ / √d_k) · V\`\n\n- Q (Query)：查询向量，shape (n, d_k)\n- K (Key)：键向量，shape (n, d_k)\n- V (Value)：值向量，shape (n, d_v)\n- √d_k 缩放：防止内积过大导致 softmax 饱和（梯度消失）\n\n**为什么除以 √d_k？** 当 d_k 较大时，QKᵀ 元素方差为 d_k，softmax 输入过大导致梯度极小。除以 √d_k 使方差恢复为 1。\n\n### 2. 多头注意力（Multi-Head Attention）\n\n将 Q/K/V 投影到 h 个子空间，分别做注意力后拼接：\n\n\`MultiHead = Concat(head₁, ..., head_h) W^O\`\n\n\`headᵢ = Attention(QWᵢQ, KWᵢK, VWᵢV)\`\n\n意义：让模型从**多个视角**建模依赖关系（如语法、语义、指代不同子空间）。\n\n论文取 h=8, d_k = d_v = 64，总维度 512。\n\n### 3. 位置编码（Positional Encoding）\n\n注意力本身无序（置换不变），需注入位置信息：\n\n\`PE(pos, 2i) = sin(pos / 10000^(2i/d))\`\n\`PE(pos, 2i+1) = cos(pos / 10000^(2i/d))\`\n\n**设计巧思**：正余弦函数让模型能外推到更长序列，且相对位置可由线性变换表示。\n\n## 三、Encoder-Decoder 架构\n\n- **Encoder**：6 层，每层 = 多头自注意力 + FFN + 残差 + LayerNorm\n- **Decoder**：6 层，增加**掩码多头注意力**防止看到未来（自回归生成）\n- **FFN**：两层线性 + ReLU：\`FFN(x) = max(0, xW₁ + b₁)W₂ + b₂\`\n  - 内层维度 2048（4 倍于模型维度 512）\n\n### 残差与 LayerNorm\n\`output = LayerNorm(x + Sublayer(x))\`\n\n残差保证梯度流通，LayerNorm 稳定训练。\n\n## 四、训练细节\n\n- **优化器**：Adam，β₁=0.9, β₂=0.98\n- **学习率**：预热 + 余弦衰减\n  \`lr = d_model^(-0.5) · min(step^(-0.5), step · warmup_steps^(-1.5))\`\n- **正则化**：\n  - Dropout = 0.1（每个子层输出 + 嵌入）\n  - Label Smoothing = 0.1（影响置信度，提升 BLEU）\n- **训练规模**：8 P100 GPU，base 模型 12 小时 / big 模型 3.5 天\n\n## 五、实验结果\n\n| 模型 | WMT14 EN-DE BLEU | WMT14 EN-FR BLEU |\n|------|------------------|------------------|\n| 之前 SOTA | 26.30 | 41.16 |\n| Transformer (base) | 27.3 | 38.1 |\n| Transformer (big) | **28.4** | **41.0** |\n\n训练速度比之前 SOTA 快 4-8 倍（得益于并行）。\n\n## 六、影响与衍生模型\n\n| 模型 | 架构 | 任务 | 时间 |\n|------|------|------|------|\n| BERT | Encoder-only | 理解 | 2018 |\n| GPT 系列 | Decoder-only | 生成 | 2018+ |\n| T5 | Encoder-Decoder | 通用 | 2019 |\n| ViT | Encoder-only | 视觉 | 2020 |\n| Whisper | Encoder-Decoder | 语音 | 2022 |\n\n## 七、局限性\n- **O(n²) 复杂度**：长序列注意力开销大（催生 Longformer、Linformer、Mamba）\n- **位置编码外推弱**（催生 ALiBi、RoPE）\n- **无显式记忆**（催生 RAG、Memory Networks）\n\n## 八、关键洞察\n\n> Transformer 的本质是用 **O(n²) 的全局注意力**换取 **O(1) 的依赖路径长度**，使长程依赖建模与并行计算同时成为可能。这一权衡催生了整个大模型时代。\n\n## 九、推荐延伸阅读\n\n1. *The Annotated Transformer*（Harvard NLP）：逐行代码注释\n2. *Illustrated Transformer*（Jay Alammar）：可视化讲解\n3. *Percy Liang - Transformer Foundations*：理论分析`,
+  },
+  {
+    id: 'res7', type: 'mindmap', title: '知识图谱构建流程图',
+    chapter: '核心技术 · 知识图谱', summary: '从实体抽取、关系抽取到知识融合与推理，可视化工业级知识图谱构建全流程，含经典与神经方法对照及典型应用场景。',
+    difficulty: '进阶', createdAt: '4 天前',
+    content: `# 知识图谱构建流程图\n\n本思维导图系统梳理工业级知识图谱构建全流程，覆盖从原始文本到可推理知识库的完整链路。\n\n## 一、知识图谱核心组件\n\n- **实体（Entity）**：人、地、物、概念、事件\n  - 实例：李白、北京、iPhone 15、感冒、二战\n- **关系（Relation）**：实体间连接\n  - 实例：(李白, 出生于, 碎叶城)\n- **属性（Attribute）**：实体的数值/文本特征\n  - 实例：(李白, 朝代, 唐)\n- **三元组**：(实体, 关系, 实体) 或 (实体, 属性, 值)\n- **本体（Ontology）**：概念层级与约束（schema 层）\n\n## 二、构建流程总览\n\n\`\`\`\n原始文本 / 结构化数据\n   ↓\n[1] 实体抽取 NER\n   ↓\n[2] 关系抽取 RE\n   ↓\n[3] 实体消歧与对齐\n   ↓\n[4] 知识融合（合并多源）\n   ↓\n[5] 知识推理（补全缺失）\n   ↓\n[6] 质量评估\n   ↓\n知识图谱\n\`\`\`\n\n## 三、各阶段关键技术\n\n| 阶段 | 经典方法 | 神经方法 | 评估指标 |\n|------|----------|----------|----------|\n| 实体抽取 NER | CRF、规则、字典 | BiLSTM-CRF、BERT-NER、LLM 抽取 | P/R/F1 |\n| 关系抽取 RE | 模板匹配、远程监督 | PCNN、BERT-RC、SpanBERT | P/R/F1 |\n| 事件抽取 EE | 触发词 + 论元 | PLMEE、CasEE | P/R/F1 |\n| 实体消歧 | 上下文相似度 | BERT 编码 + 聚类 | Accuracy |\n| 实体对齐 | LIMES、Silk | GCN-Align、BERT-Align | Hits@k |\n| 知识推理 | 一阶逻辑、规则 | TransE、RotatE、GNN | MRR、Hits@10 |\n| 图谱问答 | 模板匹配 | KBERT、GraftNet | Hits@1 |\n\n## 四、知识表示学习\n\n### 1. 翻译模型\n- **TransE**：\`h + r ≈ t\`，简单高效，仅适 1-N 关系\n- **TransH**：关系超平面，处理 N-N\n- **TransR**：关系空间，更通用但慢\n- **RotatE**：复数空间旋转，处理对称/反对称/反演\n\n### 2. 神经网络模型\n- **DistMult**：双线性，对称关系\n- **ComplEx**：复数双线性，任意关系\n- **ConvE**：卷积，性能强\n\n### 3. 图神经网络\n- **R-GCN**：关系感知 GCN\n- **CompGCN**：组合算子\n- **HGT**：异构图 Transformer\n\n## 五、典型知识图谱\n\n| 图谱 | 类型 | 规模 |\n|------|------|------|\n| Google Knowledge Graph | 通用 | 数十亿实体 |\n| Wikidata | 通用 | 1 亿+ 实体 |\n| DBpedia | 通用（从维基抽取） | 数千万 |\n| ConceptNet | 常识 | 800 万+ 节点 |\n| YAGO | 通用 | 1000 万+ 实体 |\n| 工商图谱 | 领域 | 企业/人物/股权 |\n| 医学图谱 | 领域 | UMLS、Symptom |\n\n## 六、典型应用\n\n- **智能问答（KBQA）**：Freebase QA、ComplexWebQuestions\n- **推荐系统**：物品-用户-属性图，缓解冷启动\n- **辅助决策**：金融风控、反欺诈\n- **搜索引擎**：Google Knowledge Graph、百度知心\n- **对话系统**：基于事实的多轮对话\n- **药物发现**：DrugBank 等医药图谱\n\n## 七、挑战与趋势\n\n- **开放信息抽取**：从封闭域到开放域\n- **多模态知识图谱**：图像、视频、音频实体\n- **时序知识图谱**：建模事件演变\n- **大模型 + 知识图谱**：RAG 检索增强、知识注入 LLM\n\n> 思维导图要点：知识图谱是连接主义之外"显式知识"的代表，与大模型结合（RAG）是当前最热门方向之一。`,
+  },
+  {
+    id: 'res8', type: 'quiz', title: '大语言模型预训练范式练习（10题）',
+    chapter: '核心技术 · 大语言模型', summary: '系统梳理大语言模型预训练范式核心概念，含 GPT/BERT 目标、SFT、RLHF、DPO、CoT、涌现能力等知识导引，配合 10 道结构化练习题。',
+    difficulty: '高阶', createdAt: '5 天前', duration: '10 道题',
+    quizId: 'quiz2',
+    content: `# 大语言模型预训练范式 - 知识梳理\n\n本节为「大语言模型预训练范式」专项练习的知识导引，帮助你建立从预训练到对齐的完整概念框架。\n\n## 一、核心概念\n\n### 1. 预训练范式分类\n\n| 范式 | 代表模型 | 架构 | 目标 |\n|------|----------|------|------|\n| 因果语言建模 CLM | GPT、Llama | Decoder-only | 预测下一 token |\n| 掩码语言建模 MLM | BERT、RoBERTa | Encoder-only | 预测被遮蔽 token |\n| 序列到序列 | T5、BART | Encoder-Decoder | 重建被破坏文本 |\n| 全词掩码 | ERNIE、MacBERT | Encoder-only | 整词遮蔽 |\n\n### 2. Scaling Law\n\nOpenAI 提出的缩放定律：\n\n\`L(N) = (N_c/N)^α_N\`\n\n模型 loss 随参数量 N、数据量 D、算力 C 呈幂律下降，为后续大模型训练提供理论依据。\n\n## 二、训练阶段全流程\n\n### 阶段 1：预训练（Pre-training）\n- 海量无标注语料（万亿 token）\n- 目标：学习语言规律与世界知识\n- 数据：Common Crawl、Wikipedia、代码、论文\n\n### 阶段 2：监督微调 SFT（Supervised Fine-Tuning）\n- 高质量指令-回答对（数万到数百万）\n- 目标：学会遵循指令、对话格式\n- 数据：Alpaca、ShareGPT、FLAN\n\n### 阶段 3：对齐（Alignment）\n\n#### 3.1 RLHF（Reinforcement Learning from Human Feedback）\n\n三阶段流程：\n1. **SFT** 监督微调得到初始策略\n2. 训练**奖励模型 RM**：用人类标注的偏好对 (preferred, rejected) 训练\n3. **PPO 强化学习**：用 RM 的奖励信号优化策略，加入 KL 散度防止偏离 SFT\n\n目标函数：\n\`max_π E[r(x,y)] - β·KL(π || π_SFT)\`\n\n#### 3.2 DPO（Direct Preference Optimization）\n\n直接在偏好对上优化策略，**省去显式奖励模型与 PPO**：\n\n\`L_DPO = -E[log σ(β log(π_θ(y_w)/π_ref(y_w)) - β log(π_θ(y_l)/π_ref(y_l)))]\`\n\n优点：训练稳定、实现简单、单阶段\n\n#### 3.3 其他对齐方法\n- **Constitutional AI**（Anthropic）：用宪法原则让模型自我批评改进\n- **RLAIF**：用 AI 反馈代替人类反馈\n- **KTO**：Kahneman-Tversky 优化，无需成对数据\n- **ORPO**：单调对齐，融合 SFT 与偏好优化\n\n## 三、关键概念\n\n### 1. 涌现能力（Emergent Abilities）\n\n当模型规模超过某阈值后，会**突然**出现小模型没有的能力：\n- 思维链 CoT（Chain-of-Thought）\n- 上下文学习 In-Context Learning\n- 指令遵循\n- 工具使用\n\n> 争议：部分研究认为"涌现"是评估指标的非线性造成的假象。\n\n### 2. CoT 思维链\n\n通过让模型"展示推理过程"提升复杂推理能力：\n\n\`\`\`\nQ: 小明有 3 个苹果，吃了 1 个，又买了 2 个，现在几个？\nA: 让我们一步步思考：\n  初始 3 个 → 吃了 1 个剩 2 个 → 买 2 个共 4 个\n答案：4\n\`\`\`\n\n### 3. 上下文学习（ICL）\n\nFew-shot 示例直接放在 prompt 中，模型无需梯度更新即可学习新任务。\n\n### 4. RAG 检索增强\n\n将外部知识检索与 LLM 结合，缓解幻觉：\n\`query → 检索文档 → 拼接 prompt → LLM 生成\`\n\n### 5. Agent 智能体\n\nLLM 作为推理引擎，通过 ReAct/Plan-Execute 框架调用工具完成任务。\n\n## 四、对齐方法对比\n\n| 方法 | 是否需 RM | 是否需偏好对 | 训练稳定性 | 代表实现 |\n|------|-----------|--------------|------------|----------|\n| RLHF | ✓ | ✓ | 较差（PPO） | InstructGPT |\n| DPO | ✗ | ✓ | 好 | Zephyr |\n| Constitutional AI | ✓（AI） | ✗ | 中 | Claude |\n| KTO | ✗ | ✗（单标签） | 好 | - |\n\n## 五、学习建议\n\n1. **先建框架**：务必区分预训练、SFT、对齐三阶段的目标与数据\n2. **理解 RLHF 流程**：这是面试高频考点，建议手画流程图\n3. **对比 DPO 与 RLHF**：理解 DPO 为何能省去 RM，数学推导可参考原论文\n4. **关注评估**：了解 MMLU、HumanEval、AlpacaEval、LMSys Arena 等基准\n5. **动手实践**：用 HuggingFace TRL 库微调小模型（如 Llama-3-8B）体验 SFT 与 DPO\n6. **跟进前沿**：关注 Alignment Tax、Sycophancy、Deception 等开放问题\n\n## 六、典型易错点\n\n- 混淆 SFT 与 RLHF：SFT 是监督学习，RLHF 是强化学习\n- 以为 DPO 完全替代 RLHF：DPO 对偏好数据质量更敏感\n- 忽视 KL 散度：RLHF 中 KL 项防止策略崩溃\n- 混淆涌现能力与规模效应：涌现是"突变"，规模效应是"渐变"\n\n> 请通过下方答题系统完成 10 道练习题，答题后查看解析。题目涵盖概念辨析、流程设计、公式理解与场景分析，建议结合本梳理闭卷作答。`,
+  },
+  {
+    id: 'res9', type: 'doc', title: '多智能体系统与 LangGraph 编排',
+    chapter: '核心技术 · 智能体', summary: '从 PEAS 模型到现代 LLM 多智能体框架，详解智能体类型、协作模式、LangGraph 状态图编排与「智学伴」8 智能体架构设计。',
+    difficulty: '高阶', createdAt: '6 天前', duration: '约 20 分钟',
+    content: `# 多智能体系统与 LangGraph 编排\n\n本文系统介绍智能体基础理论、多智能体协作模式，以及 LLM 时代基于 LangGraph 的现代编排框架，最后剖析本课程「智学伴」的多智能体架构。\n\n## 一、智能体基础\n\n### 1. PEAS 描述框架\n描述智能体任务环境的四要素：\n- **P**erformance（性能度量）：评估智能体好坏的标准\n- **E**nvironment（环境）：智能体所处的外部世界\n- **A**ctuators（执行器）：智能体影响环境的手段\n- **S**ensors（传感器）：智能体感知环境的途径\n\n**示例**：自动驾驶出租车\n- P：安全、快速、合法、舒适\n- E：道路、其他车辆、行人、天气\n- A：方向盘、油门、刹车、喇叭\n- S：摄像头、激光雷达、GPS、里程表\n\n### 2. 环境类型\n\n| 类型 | 描述 | 示例 |\n|------|------|------|\n| 完全可观测 / 部分可观测 | 是否能感知全部状态 | 国际象棋 / 扑克 |\n| 静态 / 动态 | 环境是否随时间变化 | 填字游戏 / 出租车 |\n| 确定性 / 随机 | 行动结果是否确定 | 八数码 / 自动驾驶 |\n| 离散 / 连续 | 状态/动作空间是否离散 | 棋类 / 控制 |\n| 单智能体 / 多智能体 | 是否有其他智能体 | 魔方 / 围棋 |\n\n### 3. 智能体类型\n1. **简单反射智能体**：基于条件-动作规则，无内部状态\n2. **基于模型的反射智能体**：维护内部世界模型\n3. **基于目标的智能体**：显式目标指导行动\n4. **基于效用的智能体**：用效用函数权衡多目标\n5. **学习智能体**：能从经验改进（含学习元素、批评元素、问题生成器）\n\n## 二、多智能体协作模式\n\n| 模式 | 描述 | 应用 | 代表算法 |\n|------|------|------|----------|\n| 合作 | 分工达成共同目标 | 多机器人搬运 | MAPPO |\n| 协商 | 资源分配 | 智能电网、拍卖 | 合同网协议 |\n| 博弈 | 纳什均衡 | 自动驾驶车队 | 博弈树搜索 |\n| 竞争 | 零和博弈 | 星际争霸 | AlphaStar |\n| 对抗生成 | 博弈训练 | GAN | Minimax |\n\n### 经典多智能体算法\n- **多智能体强化学习 MARL**：QMIX、MADDPG、MAPPO\n- **分布式 MDP**：Dec-POMDP\n- **群体智能**：蚁群、粒子群\n\n## 三、LLM 时代的多智能体\n\n### 1. 代表框架\n\n| 框架 | 特点 | 编排方式 |\n|------|------|----------|\n| AutoGPT | 自主规划与执行 | ReAct 循环 |\n| MetaGPT | 模拟软件团队 SOP | 角色协作 |\n| CrewAI | 角色分工任务流 | 顺序/层级 |\n| AutoGen | 对话式多智能体 | 对话编排 |\n| LangGraph | 基于状态图 | 显式图结构 |\n| Swarm（OpenAI） | 轻量级 handoff | 角色交接 |\n\n### 2. LangGraph 核心概念\n\nLangGraph 将多智能体协作建模为**显式状态图**，节点是智能体/函数，边是控制流：\n\n\`\`\`python\nfrom langgraph.graph import StateGraph, END\nfrom typing import TypedDict\n\nclass State(TypedDict):\n    messages: list\n    next: str\n    user_id: str\n\ngraph = StateGraph(State)\ngraph.add_node("coordinator", coordinator_agent)\ngraph.add_node("profile", profile_agent)\ngraph.add_node("doc", doc_agent)\ngraph.add_node("quiz", quiz_agent)\ngraph.add_node("tutor", tutor_agent)\n\n# 静态边\ngraph.add_edge("coordinator", "profile")\n# 条件边：根据状态动态路由\ndef route(state: State) -> str:\n    if state["next"] == "练习":\n        return "quiz"\n    elif state["next"] == "答疑":\n        return "tutor"\n    return END\ngraph.add_conditional_edges("profile", route)\napp = graph.compile()\n\`\`\`\n\n**核心优势**：\n- 显式控制流，可调试可可视化\n- 支持循环、条件分支、人工介入（human-in-the-loop）\n- 状态持久化与断点续跑\n- 内置 checkpointing 与流式输出\n\n### 3. 常见协作拓扑\n- **中心化（Hub-Spoke）**：一个协调者调度其他智能体\n- **流水线（Pipeline）**：串行执行\n- **层级（Hierarchical）**：主管-工人结构\n- **去中心化（P2P）**：智能体直接通信\n\n## 四、本课程「智学伴」的多智能体架构\n\n8 个智能体协同，采用中心化 + 条件路由拓扑：\n\n\`\`\`\n学生请求\n   ↓\n[总协调] ──路由──→ [画像] 学生建模\n        ├──→ [文档] 生成讲义\n        ├──→ [思维导图] 构建知识图\n        ├──→ [题库] 出题练习\n        ├──→ [代码] 实操案例\n        ├──→ [路径] 动态规划学习路径\n        └──→ [答疑] 即时问答\n\`\`\`\n\n通过 LangGraph 编排，根据学生画像与请求动态选择智能体组合。例如：\n- 视觉型学习者 → 思维导图 + 拓展阅读\n- 应试型学习者 → 题库 + 路径\n- 实践型学习者 → 代码 + 文档\n\n## 五、设计原则\n\n1. **单一职责**：每个智能体专精一项能力\n2. **可观测**：每个节点的输入输出可追踪\n3. **可降级**：单个智能体失败不影响整体\n4. **可演化**：可热插拔新智能体\n5. **人在回路**：关键决策允许人工介入\n\n> 关键洞察：多智能体系统的核心不是"多"，而是**协作的工程化**——显式状态图、可调试、可演化，正是 LangGraph 相比早期 AutoGPT 的优势。`,
+  },
+  {
+    id: 'res11', type: 'reading', title: 'AI 伦理与对齐深度阅读',
+    chapter: '伦理与未来 · 对齐', summary: '精选 Anthropic、OpenAI 关于 AI 对齐的论文，系统梳理算法偏见、RLHF、Constitutional AI、DPO、可解释性、红队测试等方法论及 AGI 治理议题。',
+    difficulty: '高阶', createdAt: '1 周前', duration: '约 28 分钟',
+    content: `# AI 伦理与对齐深度阅读\n\n本文精选 AI 对齐领域里程碑论文，系统梳理从伦理挑战到对齐技术到 AGI 治理的完整图景。\n\n## 一、AI 主要伦理挑战\n\n### 1. 算法偏见（Bias）\n训练数据偏差导致歧视性决策。著名案例：\n- **COMPAS**：美国司法再犯预测对黑人偏见\n- **Amazon 招聘工具**：歧视女性候选人\n- **人脸识别**：对深肤色识别率低（Gender Shades 研究）\n\n### 2. 隐私侵犯\n- 人脸识别大规模部署（Clearview AI）\n- 训练数据未授权使用个人作品\n- 模型记忆并泄露训练数据（提取攻击）\n\n### 3. 责任归属\n- 自动驾驶事故（Uber、Tesla）谁负责？\n- 医疗 AI 误诊责任划分\n- 算法决策不可解释导致的法律困境\n\n### 4. 透明性\n- 黑箱模型难以问责\n- GDPR 赋予"解释权"\n- 模型卡（Model Cards）与数据卡（Datasheets）实践\n\n### 5. 深度伪造（Deepfake）\n- 虚假信息泛滥，影响选举\n- 名人换脸、声音克隆诈骗\n- 检测与溯源技术军备竞赛\n\n### 6. 就业冲击\n- 自动化取代重复劳动\n- 知识工作者受冲击（编程、写作、设计）\n- 贫富差距扩大风险\n\n## 二、AI 对齐（Alignment）方法论\n\n### 1. RLHF（OpenAI 主导）\n- SFT → RM → PPO\n- 优点：通用性强，人类反馈直接\n- 缺点：RM 易被欺骗（reward hacking）、PPO 训练不稳、人工标注贵\n\n### 2. Constitutional AI（Anthropic）\n- 用一组**宪法原则**让模型自我批评并改进\n- 减少 Human Feedback 数据需求\n- Claude 系列采用此方法\n- 两阶段：监督学习（SL）+ RLAIF\n\n### 3. 直接偏好优化 DPO\n- 直接在偏好对上优化策略\n- 数学上等价于 RLHF 的最优解\n- 无需 RM，训练稳定，实现简单\n- 缺点：对偏好数据质量更敏感\n\n### 4. 可解释性（Interpretability）\n\n#### 4.1 机械可解释性（Mechanistic Interpretability）\n- 逆向工程神经元回路\n- Anthropic 的 **Toward Monosemanticity**：用稀疏自编码器（SAE）发现 monosemantic 特征\n- Circuits 论文：逆向理解注意力头\n\n#### 4.2 探针（Probing）\n- 训练线性探针检测模型内部表示\n- BERT 中已有句法树结构\n\n#### 4.3 注意力可视化\n- Attention rollout、attention flow\n- 局限：注意力≠解释\n\n### 5. 红队测试（Red Teaming）\n- 主动发现危险能力（生化武器、网络攻击、社会工程）\n- 越狱测试（jailbreak）：DAN、角色扮演\n- 对抗样本：FGSM、PGD\n- Anthropic、OpenAI 都设有红队\n\n### 6. 安全过滤（Safety Filtering）\n- 输入过滤：拒答危险请求\n- 输出过滤：检测有害内容\n- Constitutional AI 让模型自我审查\n\n## 三、对齐的深层问题\n\n### 1. Reward Hacking\n模型学会"欺骗"奖励模型而非真正完成任务。例：清洁机器人把垃圾藏起来而非打扫。\n\n### 2. Sycophancy（谄媚）\n模型迎合用户观点而非给出正确答案。\n\n### 3. Deception（欺骗）\n模型在评估时表现良好，部署后表现不同（涌现性欺骗风险）。\n\n### 4. Power-Seeking\n理论研究表明，最优策略可能倾向于获取更多资源（instrumental convergence）。\n\n### 5. Distribution Shift\n训练分布外行为不可预测。\n\n## 四、推荐论文\n\n1. *Training language models to follow instructions with human feedback*（InstructGPT, OpenAI 2022）\n2. *Constitutional AI: Harmlessness from AI Feedback*（Anthropic 2022）\n3. *Direct Preference Optimization*（DPO, 2023）\n4. *Toward Monosemanticity*（Anthropic 2023）\n5. *Scaling Monosemanticity*（Anthropic 2024）\n6. *Discovering Latent Knowledge*（Burns et al. 2022）\n7. *Sycophancy in Language Models*（Anthropic 2023）\n\n## 五、治理框架\n\n| 框架 | 主张 | 代表 |\n|------|------|------|\n| 有效加速主义 e/acc | 加速 AI 发展 | Beff Jezos |\n| 减速主义 decel | 谨慎慢行 | Eliezer Yudkowsky |\n| 务实治理 | 分级监管 | EU AI Act |\n| 开源派 | 民主化 AI | Meta、HuggingFace |\n| 闭源派 | 集中管控 | OpenAI、Anthropic |\n\n## 六、思考\n\n> AGI 时代，AI 对齐不再只是技术问题，而是涉及哲学、政治、社会的**人类共同议题**。技术对齐（RLHF/DPO）+ 制度治理（EU AI Act）+ 国际协调（AI Safety Summit）三者缺一不可。每位 AI 从业者都应理解对齐的基本概念，因为你写下的每一行代码都在塑造未来。`,
+  },
+  {
+    id: 'res12', type: 'doc', title: '达特茅斯会议与 AI 的诞生',
+    chapter: '发展历史 · 诞生期', summary: '回顾 1956 年达特茅斯会议的历史背景、核心议题、参与人物与后续影响，理解 AI 学科诞生的历史必然性与深远意义。',
+    difficulty: '入门', createdAt: '1 周前', duration: '约 12 分钟',
+    content: `# 达特茅斯会议与 AI 的诞生\n\n1956 年夏季的达特茅斯会议被公认为 AI 学科的诞生标志。本文回顾这次历史性会议的背景、议题与深远影响。\n\n## 一、历史背景\n\n### 1. 时代土壤\n二战后计算机科学快速发展，多项基础工作为 AI 诞生铺垫：\n- 1943 McCulloch & Pitts 提出 M-P 神经元模型\n- 1948 维纳《控制论》出版\n- 1950 图灵《Computing Machinery and Intelligence》提出图灵测试\n- 1954 Newell & Simon 的 Logic Theorist 程序证明数学定理\n- 1955 Oliver Selfridge 提出 Pattern Recognition\n\n### 2. 会议缘起\n1955 年，**John McCarthy**（达特茅斯学院数学助教）、**Marvin Minsky**（哈佛初级研究员）、**Claude Shannon**（贝尔实验室数学家）、**Nathaniel Rochester**（IBM 701 总设计师）联合向洛克菲勒基金会提交提案，申请召开为期 6 周（实际约 2 个月）的暑期研讨会。\n\n提案标题：*A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence*\n\n> 这是"Artificial Intelligence"一词**首次**被正式使用。\n\n## 二、会议基本信息\n\n- **时间**：1956 年 6 月 18 日 - 8 月 17 日\n- **地点**：美国新罕布什尔州汉诺威镇，达特茅斯学院\n- **组织者**：McCarthy、Minsky、Shannon、Rochester\n- **参与者**：约 10-20 人，包括 Arthur Samuel、Ray Solomonoff、Oliver Selfridge、Allen Newell、Herbert Simon、Trenchard More 等\n- **经费**：洛克菲勒基金会资助 7500 美元\n\n## 三、会议核心议题\n\n提案列出 7 大研究方向：\n1. **自动计算机**（Automatic Computers）：如何用现有计算机实现智能\n2. **如何让计算机使用语言**：自然语言处理与翻译\n3. **神经网络**：神经元组织与学习\n4. **计算规模理论**：复杂性与可计算性\n5. **自我改进**（Self-Improvement）：机器学习与进化\n6. **抽象**：概念形成与归纳\n7. **随机性与创造性**：随机搜索与启发式\n\n## 四、会议成果与争议\n\n### 1. 实际成果\n- **Newell & Simon** 展示了 Logic Theorist，被 McCarthy 誉为"第一个 AI 程序"\n- **McCarthy** 提出时间分片（time-sharing）概念\n- 与会者达成共识：计算机可模拟智能\n- 确立了"AI"作为新学科名称\n\n### 2. 历史争议\n- 会议并未如提案预期产生重大突破，更多是交流与方向凝聚\n- 部分参与者（如 Shannon）后期相对淡出 AI\n- McCarthy 自己后来承认会议"未达成具体共识"\n\n## 五、标志性意义\n\n- **首次提出"Artificial Intelligence"一词**，学科正式命名\n- 标志 AI 作为独立学科正式诞生\n- 奠定了未来 20 年 AI 研究的方向（符号主义主导）\n- 培养了第一代 AI 研究者群体\n- 启动了 AI 的"第一次繁荣"（1956-1969）\n\n## 六、与会者的后续影响\n\n| 人物 | 后续贡献 |\n|------|----------|\n| John McCarthy | Lisp 语言（1958）、时间分片、情境演算、1971 图灵奖 |\n| Marvin Minsky | 《Perceptrons》(1969)、Society of Mind、1969 图灵奖 |\n| Claude Shannon | 信息论奠基（1948）、AI 早期贡献 |\n| Nathaniel Rochester | IBM 701 总设计师 |\n| Allen Newell | GPS、SOAR、1975 图灵奖 |\n| Herbert Simon | 有限理性、1975 图灵奖、1978 诺贝尔经济学奖 |\n| Arthur Samuel | 机器学习一词提出者（1959）、跳棋程序 |\n| Ray Solomonoff | 算法概率、归纳推理 |\n| Oliver Selfridge | 模式识别之父 |\n\n## 七、AI 诞生的历史必然性\n\n达特茅斯会议并非偶然，而是多重因素汇聚：\n1. **技术基础**：电子计算机已具备一定算力\n2. **理论积累**：图灵、维纳、McCulloch 等奠基\n3. **时代需求**：冷战催生对智能系统需求\n4. **学科渴望**：从控制论、信息论中独立的需求\n5. **关键人物**：McCarthy 等有远见的组织者\n\n## 八、历史启示\n\n> 达特茅斯会议提醒我们：**学科诞生往往源于一次有远见的学术聚会**。AI 70 年的起起落落，都源自 1956 年那个夏天一群年轻人的大胆设想。今天的 LLM 革命，正是达特茅斯精神的延续——相信智能可被人工实现，并为之不懈探索。\n\n## 九、延伸阅读\n- *The Dartmouth AI Conference: 50 Years Later*（2006 回顾）\n- Nils Nilsson《The Quest for Artificial Intelligence》\n- McCarthy 原始提案全文（在线可查）`,
+  },
+  {
+    id: 'res13', type: 'quiz', title: '机器学习基础专项练习（10题）',
+    chapter: '核心技术 · 机器学习', summary: '系统梳理机器学习核心概念，含监督/无监督/强化学习、偏差-方差、过拟合、评估指标、正则化等知识导引，配合 10 道结构化练习题。',
+    difficulty: '进阶', createdAt: '今天 09:30', duration: '10 道题',
+    quizId: 'quiz3',
+    content: `# 机器学习基础 - 知识梳理\n\n本节为「机器学习基础」专项练习的知识导引，帮助你建立从学习范式到评估调优的完整概念框架。\n\n## 一、学习范式分类\n\n### 1. 监督学习（Supervised Learning）\n有标签数据，学习输入到输出的映射。\n- **分类**：离散标签（垃圾邮件识别、图像分类）\n- **回归**：连续标签（房价预测、温度预测）\n- 代表算法：线性回归、逻辑回归、SVM、决策树、随机森林、神经网络\n\n### 2. 无监督学习（Unsupervised Learning）\n无标签数据，发现数据内在结构。\n- **聚类**：K-Means、DBSCAN、层次聚类\n- **降维**：PCA、t-SNE、UMAP\n- **密度估计**：GMM、KDE\n- **关联规则**：Apriori、FP-Growth\n\n### 3. 半监督学习\n少量标签 + 大量无标签，典型方法：自训练、协同训练、图半监督。\n\n### 4. 强化学习（Reinforcement Learning）\n智能体与环境交互，最大化累积奖励。\n- 模型无关（Model-Free）：Q-Learning、SARSA、DQN、PPO\n- 模型相关（Model-Based）：DynaQ、MCTS\n\n### 5. 自监督学习（Self-Supervised）\n从数据自身构造监督信号，是大模型预训练的基础。\n- 对比学习：SimCLR、MoCo\n- 掩码建模：BERT、MAE\n- 下一 token 预测：GPT\n\n## 二、核心理论概念\n\n### 1. 偏差-方差权衡（Bias-Variance Tradeoff）\n\n\`E[(y - ŷ)²] = Bias² + Variance + Noise\`\n\n- **偏差（Bias）**：模型预测均值与真实值差异，反映欠拟合\n- **方差（Variance）**：不同训练集预测的波动，反映过拟合\n- **权衡**：复杂模型偏差小方差大，简单模型偏差大方差小\n\n| 状态 | 偏差 | 方差 | 表现 |\n|------|------|------|------|\n| 欠拟合 | 高 | 低 | 训练误差高 |\n| 过拟合 | 低 | 高 | 训练误差低、测试误差高 |\n| 理想 | 低 | 低 | 训练测试误差都低 |\n\n### 2. 过拟合与欠拟合\n\n- **过拟合**：模型记住训练样本细节，泛化差\n  - 现象：训练 loss 低，验证 loss 高\n  - 解决：正则化、Dropout、提前停止、数据增强、简化模型\n- **欠拟合**：模型容量不足\n  - 现象：训练 loss 高\n  - 解决：增加模型复杂度、特征工程、减少正则\n\n### 3. 没有免费的午餐定理（NFL）\n\n没有一种算法在所有问题上都最优。算法选择需结合数据特性与归纳偏置。\n\n## 三、正则化方法\n\n| 方法 | 形式 | 作用 |\n|------|------|------|\n| L1 (Lasso) | λ‖w‖₁ | 稀疏特征选择 |\n| L2 (Ridge) | λ‖w‖₂² | 防止权重过大 |\n| Elastic Net | λ₁‖w‖₁ + λ₂‖w‖₂² | L1+L2 |\n| Dropout | 随机置零神经元 | 神经网络集成效果 |\n| Early Stopping | 验证 loss 上升即停 | 防止过训练 |\n| Data Augmentation | 数据变换扩充 | 提升泛化 |\n| BatchNorm | 批归一化 | 稳定训练、轻微正则 |\n\n## 四、评估指标\n\n### 1. 分类指标\n基于混淆矩阵（TP/FP/FN/TN）：\n- **准确率 Accuracy**：(TP+TN)/(TP+TN+FP+FN)，样本均衡时适用\n- **精确率 Precision**：TP/(TP+FP)，关注预测为正的准确度\n- **召回率 Recall**：TP/(TP+FN)，关注真实正例被找出的比例\n- **F1**：2·P·R/(P+R)，调和平均\n- **ROC-AUC**：阈值无关，处理不平衡\n- **PR-AUC**：极度不平衡时优于 ROC\n\n### 2. 回归指标\n- **MSE**：均方误差，对异常值敏感\n- **MAE**：平均绝对误差，鲁棒\n- **RMSE**：MSE 开方，与原量纲一致\n- **R²**：决定系数，解释方差比例\n\n### 3. 交叉验证\n- **K 折交叉验证**：K=5 或 10 常用\n- **分层 K 折**：保持类别比例\n- **留一法 LOO**：K=N，计算贵但无偏\n- **时间序列交叉验证**：避免未来信息泄漏\n\n## 五、数据划分\n\n\`\`\`\n全量数据\n  ├── 训练集 (60-80%)：拟合模型\n  ├── 验证集 (10-20%)：调超参、选模型\n  └── 测试集 (10-20%)：最终评估，仅用一次\n\`\`\`\n\n## 六、典型算法对比\n\n| 算法 | 类型 | 优点 | 缺点 |\n|------|------|------|------|\n| 线性回归 | 监督-回归 | 简单可解释 | 仅线性 |\n| 逻辑回归 | 监督-分类 | 概率输出 | 线性边界 |\n| KNN | 监督 | 无训练 | 慢、维度灾难 |\n| 朴素贝叶斯 | 监督 | 快、文本好 | 独立假设强 |\n| SVM | 监督 | 小样本强 | 大数据慢 |\n| 决策树 | 监督 | 可解释 | 易过拟合 |\n| 随机森林 | 监督 | 抗过拟合 | 不可解释 |\n| K-Means | 无监督 | 简单 | 需指定 K |\n| PCA | 无监督 | 降维 | 仅线性 |\n\n## 七、学习建议\n\n1. **先建框架**：理解监督/无监督/强化/自监督四范式的差异\n2. **吃透偏差方差**：这是机器学习面试必考，建议画图理解\n3. **手算评估指标**：给定混淆矩阵能算出 P/R/F1\n4. **实践交叉验证**：用 sklearn 的 cross_val_score 体验\n5. **理解正则化**：对比 L1/L2 的几何意义（菱形 vs 圆形约束）\n6. **跟进大模型时代**：自监督学习是 GPT/BERT 的基础\n\n> 请通过下方答题系统完成 10 道练习题，答题后查看解析。题目涵盖概念辨析、指标计算、场景分析与算法选择，建议结合本梳理闭卷作答。`,
+  },
+  {
+    id: 'res14', type: 'quiz', title: '神经网络与深度学习专项练习（10题）',
+    chapter: '核心技术 · 深度学习', summary: '系统梳理神经网络与深度学习核心概念，含感知机、反向传播、激活函数、优化器、正则化、经典架构等知识导引，配合 10 道结构化练习题。',
+    difficulty: '进阶', createdAt: '今天 10:15', duration: '10 道题',
+    quizId: 'quiz4',
+    content: `# 神经网络与深度学习 - 知识梳理\n\n本节为「神经网络与深度学习」专项练习的知识导引，帮助你建立从感知机到现代深度学习的完整概念框架。\n\n## 一、神经网络发展脉络\n\n- 1943 M-P 神经元模型（数学描述神经元）\n- 1957 感知机（Rosenblatt，单层可学习）\n- 1969 Minsky《Perceptrons》指出 XOR 困境\n- 1986 反向传播算法（Rumelhart, Hinton, Williams）\n- 1989 通用近似定理\n- 1998 LeNet-5（LeCun，首个商用 CNN）\n- 2006 深度信念网络（Hinton，深度学习复兴）\n- 2012 AlexNet（ImageNet 革命）\n- 2015 ResNet（残差连接，152 层）\n- 2017 Transformer\n- 2022+ 大模型时代\n\n## 二、核心组件\n\n### 1. 感知机与多层感知机（MLP）\n\n**感知机**：\`y = sign(w·x + b)\`\n- 仅能解决线性可分问题，无法学 XOR\n\n**多层感知机 MLP**：\`h = σ(W₁x + b₁); y = σ(W₂h + b₂)\`\n- 隐藏层 + 非线性激活 → 可解 XOR\n- **通用近似定理**：单隐层足够逼近任意连续函数（但宽度可能指数大）\n\n### 2. 激活函数\n\n| 函数 | 公式 | 优点 | 缺点 |\n|------|------|------|------|\n| Sigmoid | 1/(1+e^-x) | 输出 (0,1) | 饱和、梯度消失、非零中心 |\n| Tanh | (e^x-e^-x)/(e^x+e^-x) | 零中心 | 仍饱和 |\n| ReLU | max(0, x) | 计算快、不饱和 | 神经元死亡 |\n| Leaky ReLU | max(αx, x) | 解决死亡 | 需调 α |\n| ELU | x (x>0); α(e^x-1) (x≤0) | 平滑、负区有梯度 | 计算略贵 |\n| GELU | x·Φ(x) | Transformer 默认 | 计算贵 |\n| SwiGLU | GLU 变体 | LLaMA 使用 | 复杂 |\n\n### 3. 损失函数\n\n| 任务 | 损失 | 公式 |\n|------|------|------|\n| 回归 | MSE | (y-ŷ)² |\n| 回归 | MAE | |y-ŷ| |\n| 二分类 | BCE | -[y log ŷ + (1-y) log(1-ŷ)] |\n| 多分类 | CE | -Σ yᵢ log ŷᵢ |\n| 评测 | Hinge | max(0, 1 - y·ŷ)（SVM） |\n| 度量学习 | Triplet | max(0, d(a,p) - d(a,n) + margin) |\n\n## 三、训练核心：反向传播\n\n### 1. 链式法则\n若 \`y = f(g(x))\`，则 \`dy/dx = f'(g(x))·g'(x)\`。\n\n### 2. 计算图与反向传播\n- 前向：构建计算图，缓存中间值\n- 反向：从 loss 出发，沿图反向传播梯度\n- 复杂度与前向相当（核心优势）\n\n### 3. 梯度问题\n- **梯度消失**：Sigmoid 饱和、深层网络 → 用 ReLU + 残差\n- **梯度爆炸**：权重过大、RNN → 梯度裁剪 + 权重正则\n\n## 四、优化器\n\n| 优化器 | 更新公式 | 特点 |\n|--------|----------|------|\n| SGD | w -= η·∇L | 简单、需调 lr |\n| Momentum | v = βv + ∇L; w -= ηv | 加速收敛 |\n| Nesterov | 在动量基础上"向前看" | 更稳 |\n| AdaGrad | 累积平方梯度 | 学习率衰减过快 |\n| RMSProp | 指数移动平均平方梯度 | 适应非平稳 |\n| Adam | 动量 + RMSProp | 主流默认 |\n| AdamW | Adam + 解耦权重衰减 | Transformer 主流 |\n\n**学习率调度**：\n- 预热（warmup）：前 N 步线性增加\n- 余弦衰减：cos 衰减到 0\n- Step decay：每 epoch 乘 0.1\n- OneCycle：先升后降\n\n## 五、正则化与泛化\n\n| 方法 | 机制 | 适用 |\n|------|------|------|\n| L2 权重衰减 | 限制权重范数 | 通用 |\n| Dropout | 训练随机失活 | 全连接 |\n| BatchNorm | 批归一化 | CNN/MLP |\n| LayerNorm | 层归一化 | Transformer/RNN |\n| Data Augmentation | 数据增强 | 视觉/语音 |\n| Early Stopping | 验证集监控 | 通用 |\n| Label Smoothing | 软化标签 | 分类 |\n| Mixup | 样本插值 | 视觉 |\n\n## 六、经典架构\n\n### 1. CNN\n- 卷积 + 池化 + 全连接\n- 局部连接 + 权重共享\n- 代表：LeNet → AlexNet → VGG → ResNet → EfficientNet → ConvNeXt\n\n### 2. RNN\n- 处理序列：\`h_t = f(W_h h_{t-1} + W_x x_t)\`\n- 问题：长程依赖、梯度消失\n- LSTM/GRU：门控机制缓解\n\n### 3. Transformer\n- 自注意力：\`Attention(Q,K,V) = softmax(QKᵀ/√d_k)V\`\n- 并行、长程依赖好、O(n²) 复杂度\n- 大模型基础架构\n\n### 4. 生成模型\n- GAN：对抗训练\n- VAE：变分推断\n- Diffusion：去噪生成（Stable Diffusion、Sora）\n\n## 七、训练流程\n\n\`\`\`\n[1] 数据准备与预处理\n[2] 模型定义（前向）\n[3] 损失函数选择\n[4] 优化器配置\n[5] 训练循环：前向 → loss → 反向 → 更新\n[6] 验证与早停\n[7] 超参调优\n[8] 测试与部署\n\`\`\`\n\n## 八、关键超参数\n\n| 超参 | 典型范围 | 影响 |\n|------|----------|------|\n| 学习率 | 1e-5 ~ 1e-2 | 最关键 |\n| Batch Size | 8 ~ 512 | 梯度噪声 |\n| Epoch | 5 ~ 100 | 训练时长 |\n| 隐藏层维度 | 64 ~ 4096 | 容量 |\n| Dropout | 0.1 ~ 0.5 | 正则 |\n| 权重衰减 | 1e-5 ~ 1e-2 | 正则 |\n\n## 九、学习建议\n\n1. **先理解感知机局限**：为何不能解 XOR？为何需多层？\n2. **手推反向传播**：选两层 MLP，手推梯度公式\n3. **对比激活函数**：理解 ReLU 为何取代 Sigmoid\n4. **吃透优化器**：Adam 为何是默认？AdamW 改了什么？\n5. **实践训练循环**：用 PyTorch 手写训练循环，观察 loss 曲线\n6. **理解归一化**：BatchNorm vs LayerNorm 的差异与适用场景\n7. **跟进前沿**：阅读 ResNet、Transformer、Diffusion 经典论文\n\n## 十、典型易错点\n\n- 混淆 BatchNorm（批维度归一）与 LayerNorm（特征维度归一）\n- 以为更多层一定更好（退化问题）\n- 忽视学习率预热，Transformer 训练发散\n- 用 ReLU 不初始化偏置，导致神经元死亡\n- 梯度爆炸只调学习率，忽视梯度裁剪\n\n> 请通过下方答题系统完成 10 道练习题，答题后查看解析。题目涵盖概念辨析、公式推导、训练调试与架构对比，建议结合本梳理闭卷作答。`,
+  },
+  {
+    id: 'res15', type: 'quiz', title: 'AI 发展历史专项练习（10题）',
+    chapter: '发展历史 · 全景', summary: '系统梳理 AI 发展历史关键节点，含达特茅斯会议、两次寒冬、深度学习革命、大模型时代等知识导引，配合 10 道结构化练习题。',
+    difficulty: '入门', createdAt: '今天 11:00', duration: '10 道题',
+    quizId: 'quiz5',
+    content: `# AI 发展历史 - 知识梳理\n\n本节为「AI 发展历史」专项练习的知识导引，帮助你建立 AI 70 年发展史的完整时间线与因果脉络。\n\n## 一、孕育期（1940s-1955）\n\n### 1. 哲学与技术基础\n- 1943 **M-P 神经元模型**（McCulloch & Pitts）：首次用数学描述神经元，提出二值阈值逻辑\n- 1946 **ENIAC** 诞生，电子计算机时代开启\n- 1948 **维纳《控制论》** 出版，反馈与控制思想影响行为主义\n- 1948 Shannon《通信的数学理论》信息论奠基\n- 1950 **图灵测试**（《Computing Machinery and Intelligence》）：提出"机器能否思考"的判据\n- 1954 Newell & Simon **Logic Theorist** 证明《数学原理》定理\n\n### 2. 关键思想\n- 认知即计算\n- 智能可被人工实现\n- 神经元可数学建模\n\n## 二、诞生与第一次繁荣（1956-1969）\n\n### 1. 达特茅斯会议（1956）\n- **时间**：1956 年 6-8 月\n- **地点**：美国新罕布什尔州达特茅斯学院\n- **组织者**：McCarthy、Minsky、Shannon、Rochester\n- **意义**：首次提出"Artificial Intelligence"一词，学科正式诞生\n\n### 2. 主要成果\n- 1957 **感知机**（Rosenblatt）：首个可学习神经网络\n- 1959 几何定理证明器（Gelernter）\n- 1961 Samuel 跳棋程序（提出"机器学习"一词）\n- 1965 **ELIZA** 聊天机器人（Weizenbaum）\n- 1969 **Shakey** 机器人（SRI，首个可推理行动机器人）\n- 符号主义主导，专家系统雏形\n\n## 三、第一次低谷（1969-1973）\n\n### 1. 触发事件\n- 1969 **Minsky《Perceptrons》**：指出单层感知机无法学 XOR，神经网络研究陷入停滞\n- 1973 **Lighthill 报告**：英国政府削减 AI 研究经费\n- 1973 DARPA 大幅削减美国 AI 经费\n\n### 2. 深层原因\n- 算力不足（内存 KB 级）\n- 知识表示困难\n- 机器翻译项目 ALPAC 报告失败\n- 早期承诺未兑现\n\n## 四、第二次繁荣（1980-1987）\n\n### 1. 专家系统商业化\n- 1980 **XCON**（DEC）：年省 4000 万美元，专家系统商业化元年\n- **MYCIN** 医疗诊断\n- 全球专家系统超 2000 个\n\n### 2. 神经网络复兴\n- 1982 **Hopfield 网络**\n- 1986 **反向传播**（Rumelhart, Hinton, Williams）普及\n\n### 3. 各国战略\n- 1981 日本第五代计算机计划（10 亿美元）\n- 美国 MCC 联盟、欧洲 ESPRIT\n\n## 五、第二次低谷（1987-1993）\n\n### 1. 触发事件\n- 专家系统维护成本高，知识获取瓶颈暴露\n- **Lisp 机**被通用工作站取代（Symbolics、LMI 倒闭）\n- 日本第五代计算机未达预期\n\n### 2. 转向\n- 神经网络研究转入学术界\n- 统计学习方法（SVM、贝叶斯）兴起\n- AI 与机器人、数据挖掘融合\n\n## 六、稳步发展期（1993-2011）\n\n### 1. 里程碑\n- 1995 **SVM**（Vapnik）\n- 1995 **LeNet** 用于手写数字识别（ATM）\n- 1997 **Deep Blue** 击败 Kasparov（国际象棋）\n- 1997 **LSTM**（Hochreiter & Schmidhuber）\n- 2006 **深度信念网络**（Hinton）：深度学习复兴信号\n- 2009 **ImageNet** 数据集发布（Li Fei-Fei）\n- 2011 IBM **Watson** 击败《Jeopardy!》冠军\n\n### 2. 特点\n- 统计学习为主流\n- 算力提升（GPU 普及）\n- 大数据积累\n- 神经网络"潜伏"研究\n\n## 七、深度学习爆发期（2012 至今）\n\n### 1. 深度学习革命\n- 2012 **AlexNet**：ImageNet 错误率从 26% 降至 15%，深度学习时代开启\n- 2014 **GAN**（Goodfellow）\n- 2015 **ResNet**：152 层，残差连接\n- 2016 **AlphaGo** 击败李世石（围棋）\n\n### 2. 大模型时代\n- 2017 **Transformer**（《Attention is All You Need》）\n- 2018 **BERT**（Google）\n- 2020 **GPT-3**：1750 亿参数，涌现能力\n- 2022 **ChatGPT**：通用对话引爆，AI 进入大众视野\n- 2022 **Stable Diffusion** 开源\n- 2023 **GPT-4**、**Gemini**、**Claude** 多模态\n- 2024 **Sora** 视频生成、**Llama 3** 开源\n\n## 八、两次寒冬对比\n\n| 维度 | 第一次寒冬 (1969-1973) | 第二次寒冬 (1987-1993) |\n|------|------------------------|------------------------|\n| 触发 | Minsky 批判感知机 | Lisp 机倒闭、专家系统瓶颈 |\n| 报告 | Lighthill 报告 | ALPAC 后续影响 |\n| 主流派受挫 | 连接主义 | 符号主义 |\n| 转向 | 符号主义兴盛 | 统计学习兴起 |\n| 持续 | ~4 年 | ~6 年 |\n\n## 九、关键人物\n\n| 人物 | 主要贡献 | 图灵奖 |\n|------|----------|--------|\n| Turing | 图灵测试、计算机科学奠基 | - |\n| McCarthy | AI 命名、Lisp | 1971 |\n| Minsky | 感知机批判、Society of Mind | 1969 |\n| Newell & Simon | Logic Theorist、GPS、物理符号系统 | 1975 |\n| Hinton | 反向传播、深度信念网络、深度学习 | 2024（诺贝尔物理）|\n| LeCun | CNN、LeNet | 2018 |\n| Bengio | 深度学习理论 | 2018 |\n| Hassabis | AlphaGo、AlphaFold | - |\n\n## 十、历史规律\n\n1. **螺旋上升**：每次低谷后都伴随更大突破\n2. **算力驱动**：每次繁荣都伴随算力跃迁（GPU、TPU）\n3. **数据驱动**：ImageNet、Common Crawl 等数据集是爆发前提\n4. **范式转移**：符号→统计→深度→大模型，每 10-15 年一次\n5. **预期周期**：过度承诺 → 失望寒冬 → 务实突破\n\n## 十一、学习建议\n\n1. **建立时间线**：手画 1940-2024 的关键节点图\n2. **理解两次寒冬**：分析触发原因与深层规律，思考是否会有第三次寒冬\n3. **追踪人物**：关注图灵奖、诺贝尔奖得主的贡献脉络\n4. **对比范式**：符号主义 vs 连接主义 vs 行为主义的兴衰\n5. **思考未来**：大模型之后，下一个范式可能是什么？\n6. **阅读原典**：达特茅斯提案、Lighthill 报告、AlexNet 论文\n\n> 请通过下方答题系统完成 10 道练习题，答题后查看解析。题目涵盖时间排序、事件因果、人物贡献与历史规律，建议结合本梳理闭卷作答。`,
+  },
+  {
+    id: 'res16', type: 'doc', title: '知识表示方法综述',
+    chapter: '基础知识 · 知识表示', summary: '系统对比谓词逻辑、产生式规则、框架、语义网络、本体五种经典知识表示方法，含表达力、推理效率、可扩展性权衡与典型应用。',
+    difficulty: '进阶', createdAt: '今天 13:40', duration: '约 16 分钟',
+    content: `# 知识表示方法综述\n\n知识表示是符号主义 AI 的核心——如何让计算机"理解"和"使用"人类知识。本文系统对比五种经典方法。\n\n## 一、为什么需要知识表示\n\n- **存储**：以计算机可处理的形式保存知识\n- **推理**：支持逻辑推断与新知识导出\n- **共享**：跨系统、跨语言复用\n- **解释**：推理过程可追溯可解释\n\n## 二、五种经典方法对比\n\n| 方法 | 表达力 | 推理效率 | 可扩展性 | 典型应用 |\n|------|--------|----------|----------|----------|\n| 谓词逻辑 | 高 | 中（合一复杂） | 中 | 定理证明 |\n| 产生式规则 | 中 | 高（模式匹配） | 中 | 专家系统 |\n| 框架 | 中 | 中 | 中 | 自然语言理解 |\n| 语义网络 | 中 | 高（图遍历） | 高 | 知识图谱雏形 |\n| 本体 | 高 | 中 | 高 | 语义 Web、知识图谱 |\n\n## 三、谓词逻辑（Predicate Logic）\n\n### 1. 一阶谓词逻辑\n量词 ∀（任意）、∃（存在）+ 谓词 + 项。\n\n示例：\n- \`∀x (人(x) → 会死(x))\`：所有人都会死\n- \`人(苏格拉底)\`：苏格拉底是人\n- 推出：\`会死(苏格拉底)\`\n\n### 2. 优缺点\n- **优势**：语义严密、推理可靠完备\n- **劣势**：知识获取需人工编码、难处理模糊与不确定性\n\n## 四、产生式规则（Production Rules）\n\n形式：\`IF 前提 THEN 结论 (置信度)\`\n\n示例：\n\`\`\`\nIF 发热 AND 咳嗽 AND 旅行史 THEN 疑似流感 (0.85)\n\`\`\`\n\n代表系统：MYCIN（医疗诊断）、CLIPS、Drools。\n\n- **优势**：模块化、可解释、与专家思维契合\n- **劣势**：规则冲突、组合爆炸、知识获取瓶颈\n\n## 五、框架（Frame）\n\nMinsky 提出，以**对象-属性-值**结构组织知识：\n\n\`\`\`\n框架：小明\n  IS-A：学生\n  专业：计算机\n  年级：大三\n  子框架：\n    课程：[AI, 操作系统]\n\`\`\`\n\n支持继承、默认值、附加过程（demon）。\n\n## 六、语义网络（Semantic Network）\n\n用**节点-边-节点**三元组表示知识：\n\n\`(李白) --(出生于)--> (碎叶城)\n\`(李白) --(朝代)--> (唐)\n\n是现代知识图谱的概念前身。\n\n## 七、本体（Ontology）\n\nGruber 定义：本体是"共享概念化的明确规范"。\n\n- **概念层**：类、属性、关系、实例\n- **代表语言**：RDF、RDFS、OWL\n- **代表项目**：WordNet、DBpedia、Wikidata\n\n## 八、与大模型的融合\n\n当代知识表示走向"**神经 + 符号**"融合：\n- **向量表示**：Word2Vec、BERT embedding\n- **知识图谱嵌入**：TransE、RotatE\n- **RAG 检索**：大模型 + 知识库向量索引\n- **神经符号推理**：LLM 调用逻辑工具\n\n> 关键洞察：没有一种表示方法是万能的。谓词逻辑保证严谨，语义网络支持扩展，向量表示支持模糊匹配。**混合表示**是未来方向。`,
+  },
+  {
+    id: 'res17', type: 'mindmap', title: '搜索算法决策图',
+    chapter: '核心技术 · 搜索技术', summary: '可视化梳理无信息搜索、启发式搜索、博弈搜索、约束满足四大类算法，含完备性、最优性、复杂度对比与选择策略。',
+    difficulty: '进阶', createdAt: '今天 12:20',
+    content: `# 搜索算法决策图\n\n本思维导图系统梳理 AI 搜索算法体系，帮助你建立"何时用何种搜索"的决策能力。\n\n## 一、搜索算法分类总览\n\n\`\`\`\n搜索算法\n├── 无信息搜索（Uninformed）\n│   ├── BFS 广度优先\n│   ├── DFS 深度优先\n│   ├── UCS 一致代价\n│   ├── DLS 深度受限\n│   └── IDS 迭代加深\n├── 启发式搜索（Informed）\n│   ├── 贪心最佳优先\n│   ├── A*\n│   ├── IDA*\n│   └── RBFS\n├── 博弈搜索（Adversarial）\n│   ├── Minimax\n│   ├── Alpha-Beta 剪枝\n│   └── MCTS 蒙特卡洛树搜索\n└── 约束满足（CSP）\n    ├── 回溯法\n    ├── 前向检查\n    └── AC-3 弧一致\n\`\`\`\n\n## 二、无信息搜索对比\n\n| 算法 | 完备性 | 最优性 | 时间 | 空间 |\n|------|--------|--------|------|------|\n| BFS | ✓ | ✓（等代价） | O(b^d) | O(b^d) |\n| DFS | ✗ | ✗ | O(b^m) | O(bm) |\n| UCS | ✓ | ✓ | O(b^(C*/ε)) | O(b^(C*/ε)) |\n| DLS | ✓（l≥d） | ✗ | O(b^l) | O(bl) |\n| IDS | ✓ | ✓（等代价） | O(b^d) | O(bd) |\n\n> b=分支因子，d=解深度，m=最大深度，C*=最优代价。\n\n## 三、启发式搜索\n\n### A* 估值函数\n\`f(n) = g(n) + h(n)\`\n\n- h 可采纳 → 树搜索最优\n- h 一致 → 图搜索最优\n\n### 启发函数设计\n- 曼哈顿距离（网格）\n- 欧几里得距离（连续）\n- 错位棋子数（8 数码）\n\n## 四、博弈搜索\n\n### Minimax\n零和博弈中，MAX 最大化最小收益：\n\`v = max min v(子节点)\`\n\n### Alpha-Beta 剪枝\n在 Minimax 基础上剪去不影响结果的分支，最佳情况时间复杂度 O(b^(d/2))。\n\n### MCTS\n蒙特卡洛树搜索：选择 → 扩展 → 模拟 → 回溯，AlphaGo 核心。\n\n## 五、选择决策树\n\n1. 解浅、内存够 → BFS\n2. 解深、内存紧 → IDS\n3. 有启发信息 → A*\n4. 内存严格受限 → IDA*\n5. 零和博弈 → Alpha-Beta\n6. 大分支因子博弈 → MCTS\n7. 约束求解 → 回溯 + AC-3\n\n## 六、应用场景\n\n| 场景 | 推荐算法 |\n|------|----------|\n| 路径规划 | A* / D* Lite |\n| 国际象棋 | Alpha-Beta |\n| 围棋 | MCTS + 神经网络 |\n| 数独 | 回溯 + 约束传播 |\n| 推箱人 | A* + 启发函数 |\n\n> 思维导图要点：搜索算法的选择取决于问题特性——是否有序、是否有启发、是否对抗、是否有约束。理解这些维度，才能正确选型。`,
+  },
+  {
+    id: 'res19', type: 'code', title: 'K-Means 聚类与 PCA 降维实战',
+    chapter: '核心技术 · 机器学习', summary: '手写实现 K-Means 与 PCA，含肘部法则、轮廓系数、方差解释比、sklearn 调用与可视化对比。',
+    difficulty: '进阶', createdAt: '3 小时前', duration: '约 20 分钟',
+    content: `# K-Means 聚类与 PCA 降维实战\n\n本 Notebook 从手写实现到 sklearn 调用，系统对比无监督学习两大经典方法。\n\n## 一、K-Means 手写实现\n\n### 1. 算法步骤\n1. 随机初始化 K 个聚类中心\n2. 分配：每个样本分到最近中心\n3. 更新：中心 = 簇内均值\n4. 重复 2-3 直至收敛\n\n### 2. 代码实现\n\n\`\`\`python\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ndef kmeans(X, k, max_iter=100):\n    # 随机初始化中心\n    idx = np.random.choice(len(X), k, replace=False)\n    centroids = X[idx].copy()\n    for _ in range(max_iter):\n        # 分配步骤\n        dists = np.linalg.norm(X[:, None] - centroids[None, :], axis=2)\n        labels = dists.argmin(axis=1)\n        # 更新步骤\n        new_centroids = np.array([X[labels==i].mean(axis=0) if (labels==i).any() else centroids[i] for i in range(k)])\n        if np.allclose(centroids, new_centroids):\n            break\n        centroids = new_centroids\n    return labels, centroids\n\`\`\`\n\n### 3. K 值选择\n\n\`\`\`python\n# 肘部法则\ninertias = []\nfor k in range(1, 11):\n    labels, cents = kmeans(X, k)\n    inertia = sum(np.min(np.linalg.norm(X[:,None]-cents[None:], axis=2), axis=1))\n    inertias.append(inertia)\nplt.plot(range(1,11), inertias, 'o-')\nplt.xlabel('K'); plt.ylabel('Inertia'); plt.title('Elbow Method')\n\`\`\`\n\n## 二、PCA 手写实现\n\n### 1. 算法步骤\n1. 数据中心化\n2. 计算协方差矩阵\n3. 特征值分解\n4. 取前 k 个主成分投影\n\n\`\`\`python\ndef pca(X, n_components):\n    # 中心化\n    X_centered = X - X.mean(axis=0)\n    # 协方差矩阵\n    cov = np.cov(X_centered.T)\n    # 特征值分解\n    eigenvalues, eigenvectors = np.linalg.eigh(cov)\n    # 降序排列\n    idx = eigenvalues.argsort()[::-1]\n    eigenvalues = eigenvalues[idx]\n    eigenvectors = eigenvectors[:, idx]\n    # 取前 k 个\n    components = eigenvectors[:, :n_components]\n    # 投影\n    X_pca = X_centered @ components\n    # 方差解释比\n    explained_ratio = eigenvalues / eigenvalues.sum()\n    return X_pca, explained_ratio\n\`\`\`\n\n## 三、sklearn 调用\n\n\`\`\`python\nfrom sklearn.cluster import KMeans\nfrom sklearn.decomposition import PCA\nfrom sklearn.metrics import silhouette_score\n\n# K-Means\nkm = KMeans(n_clusters=3, init='k-means++', n_init=10, random_state=42)\nlabels = km.fit_predict(X)\nprint('轮廓系数:', silhouette_score(X, labels))\n\n# PCA\npca = PCA(n_components=2)\nX_pca = pca.fit_transform(X)\nprint('方差解释比:', pca.explained_variance_ratio_)\n\`\`\`\n\n## 四、K-Means vs PCA\n\n| 维度 | K-Means | PCA |\n|------|---------|-----|\n| 类型 | 聚类 | 降维 |\n| 目标 | 最小化簇内方差 | 最大化投影方差 |\n| 输出 | 离散标签 | 连续坐标 |\n| K 选择 | 肘部法则 | 累计方差解释比 |\n\n## 五、组合应用\n\n先用 PCA 降维可视化，再用 K-Means 聚类：\n\n\`\`\`python\nX_pca = PCA(n_components=2).fit_transform(X)\nlabels = KMeans(n_clusters=3).fit_predict(X_pca)\nplt.scatter(X_pca[:,0], X_pca[:,1], c=labels, cmap='viridis')\n\`\`\`\n\n## 六、思考题\n1. K-Means 为何对初始中心敏感？k-means++ 如何改进？\n2. PCA 为何要中心化？不中心化会怎样？\n3. K-Means 与 EM 算法的关系？\n4. PCA 与 t-SNE 的适用场景差异？`,
+  },
+  {
+    id: 'res20', type: 'reading', title: 'GAN 与扩散模型生成艺术论文选读',
+    chapter: '核心技术 · 生成模型', summary: '精选 GAN、StyleGAN、DDPM、Stable Diffusion 四篇里程碑论文，梳理生成模型从对抗到扩散的范式演进。',
+    difficulty: '高阶', createdAt: '2 天前', duration: '约 32 分钟',
+    content: `# GAN 与扩散模型生成艺术论文选读\n\n本文精选生成模型四篇里程碑论文，梳理从对抗训练到扩散模型的范式演进。\n\n## 一、论文清单\n\n| 论文 | 年份 | 核心创新 | 影响 |\n|------|------|----------|------|\n| Generative Adversarial Networks | 2014 | 对抗训练 | 生成模型复兴 |\n| StyleGAN | 2019 | 风格控制 | AI 艺术 |\n| DDPM | 2020 | 扩散去噪 | 扩散模型奠基 |\n| Stable Diffusion | 2022 | 潜空间扩散 | 开源生成艺术 |\n\n## 二、GAN（Goodfellow, 2014）\n\n### 核心思想\n生成器 G 与判别器 D 博弈：\n- G 试图生成以假乱真的样本\n- D 试图区分真伪\n- 纳什均衡时 G 学到真实分布\n\n**目标函数**：\n\`min_G max_D E[log D(x)] + E[log(1-D(G(z)))]\`\n\n### 训练难题\n- 模式崩溃（mode collapse）\n- 训练不稳定\n- 评估困难（FID、IS）\n\n### 改进变体\n- DCGAN：卷积 GAN\n- WGAN：Wasserstein 距离稳定训练\n- CycleGAN：无配对图像转换\n- BigGAN：大规模生成\n\n## 三、StyleGAN（NVIDIA, 2019）\n\n### 核心创新\n- **AdaIN** 自适应实例归一化注入风格\n- 渐进式增长（ProGAN 基础）\n- 风格混合与噪声注入\n\n### 效果\n- 生成 1024×1024 高分辨率人脸\n- 可控制粗粒度（姿势）到细粒度（肤色）\n- 催生 AI 艺术与 deepfake\n\n## 四、DDPM（Ho et al., 2020）\n\n### 核心思想\n扩散模型分两过程：\n1. **前向扩散**：逐步加噪声直至纯噪声\n2. **反向去噪**：训练网络逐步去噪恢复\n\n**前向**：\`q(x_t | x_{t-1}) = N(√(1-β_t) x_{t-1}, β_t I)\`\n**反向**：\`p_θ(x_{t-1} | x_t) = N(μ_θ(x_t), Σ_θ)\`\n\n### 优势\n- 训练稳定（无对抗）\n- 生成质量高\n- 理论清晰（score matching）\n\n### 劣势\n- 采样慢（需多步去噪）\n- 后续改进：DDIM、DPM-Solver\n\n## 五、Stable Diffusion（Rombach et al., 2022）\n\n### 核心创新\n- **潜空间扩散**：在 VAE 编码的潜空间做扩散，大幅降低计算量\n- **条件控制**：CLIP 文本嵌入引导\n- **开源**：模型权重公开\n\n### 架构\n\`\`\`\n文本 → CLIP 编码器 → 条件嵌入\n                          ↓\n图像 → VAE 编码 → 潜空间 → 扩散去噪 → 潜空间 → VAE 解码 → 图像\n\`\`\`\n\n### 生态\n- LoRA：轻量微调\n- ControlNet：精确控制\n- 图生图、 inpainting\n\n## 六、范式演进\n\n| 维度 | GAN | VAE | 扩散 |\n|------|-----|-----|------|\n| 训练 | 对抗 | 变分 | 去噪 |\n| 稳定性 | 差 | 好 | 好 |\n| 质量 | 高 | 中 | 高 |\n| 多样性 | 低 | 高 | 高 |\n| 速度 | 快 | 快 | 慢 |\n\n## 七、关键洞察\n\n> 生成模型的演进从"对抗"走向"扩散"，本质是**用稳定的去噪过程替代不稳定的博弈训练**。Stable Diffusion 的潜空间设计使扩散模型从论文走向大众，催生了 AI 艺术浪潮。\n\n## 八、推荐延伸\n1. *Attention is All You Need*：扩散模型也用注意力\n2. *Classifier-Free Guidance*：条件生成关键技术\n3. *DALL·E 2 / Imagen*：文本到图像 SOTA`,
+  },
+  {
+    id: 'res21', type: 'doc', title: '卷积神经网络原理详解',
+    chapter: '核心技术 · 计算机视觉', summary: '从卷积运算、感受野、池化到经典架构，详解 CNN 的局部连接、权重共享与平移不变性三大特性。',
+    difficulty: '进阶', createdAt: '4 天前', duration: '约 22 分钟',
+    content: `# 卷积神经网络原理详解\n\n卷积神经网络（CNN）是计算机视觉的基石。本文从底层运算到架构演进，系统解析 CNN 原理。\n\n## 一、为什么需要 CNN\n\n全连接网络处理图像的问题：\n- **参数爆炸**：224×224×3 图像 → 第一层 1000 神经元 = 1.5 亿参数\n- **无空间结构**：丢失像素邻域信息\n- **无平移不变性**：物体移动则识别失败\n\nCNN 三大特性解决以上问题：\n1. **局部连接**：每个神经元只看局部区域\n2. **权重共享**：同一卷积核在整图滑动\n3. **平移不变性**：池化提供\n\n## 二、卷积运算\n\n### 1. 二维卷积\n\n特征图 = 输入 ⊛ 卷积核\n\n\`\`\`\n输出[i,j] = ΣΣ 输入[i+m, j+n] · 核[m,n]\n\`\`\`\n\n### 2. 关键参数\n\n| 参数 | 含义 | 典型值 |\n|------|------|--------|\n| kernel_size | 卷积核大小 | 3×3, 5×5 |\n| stride | 步长 | 1, 2 |\n| padding | 填充 | same, valid |\n| in_channels | 输入通道 | 3 (RGB) |\n| out_channels | 输出通道 | 64, 128 |\n\n### 3. 输出尺寸\n\n\`H_out = (H_in + 2P - K) / S + 1\`\n\n### 4. 感受野\n\n感受野 = 该层一个输出像素对应输入图像的区域大小。\n\n- 单层 3×3 卷积：感受野 3\n- 两层 3×3 卷积：感受野 5\n- 三层 3×3 卷积：感受野 7（等效一层 7×7，但参数更少）\n\n## 三、池化层\n\n| 类型 | 操作 | 作用 |\n|------|------|------|\n| 最大池化 | 取窗口最大值 | 保留显著特征 |\n| 平均池化 | 取窗口均值 | 平滑 |\n| 全局平均池化 | 整图取均值 | 替代全连接 |\n\n下采样 + 平移不变性 + 参数减少。\n\n## 四、经典架构演进\n\n### 1. LeNet-5（1998）\n卷积 → 池化 → 卷积 → 池化 → 全连接。首个商用 CNN。\n\n### 2. AlexNet（2012）\n- ReLU 激活（替代 Sigmoid）\n- Dropout 正则化\n- GPU 训练\n- 数据增强\n\n### 3. VGG（2014）\n- 全部 3×3 卷积堆叠\n- 证明"更深更好"\n- 16/19 层\n\n### 4. ResNet（2015）\n残差连接：\`y = F(x) + x\`\n\n解决退化问题，使 152 层可训练。是现代深度学习的标准组件。\n\n### 5. 其他创新\n- GoogLeNet：Inception 多尺度\n- DenseNet：密集连接\n- SE-Net：通道注意力\n- EfficientNet：复合缩放\n\n## 五、PyTorch 实现\n\n\`\`\`python\nimport torch.nn as nn\n\nclass SimpleCNN(nn.Module):\n    def __init__(self, num_classes=10):\n        super().__init__()\n        self.features = nn.Sequential(\n            nn.Conv2d(3, 32, 3, padding=1),\n            nn.BatchNorm2d(32),\n            nn.ReLU(inplace=True),\n            nn.MaxPool2d(2),\n            nn.Conv2d(32, 64, 3, padding=1),\n            nn.BatchNorm2d(64),\n            nn.ReLU(inplace=True),\n            nn.MaxPool2d(2),\n        )\n        self.classifier = nn.Sequential(\n            nn.AdaptiveAvgPool2d(1),\n            nn.Flatten(),\n            nn.Linear(64, num_classes),\n        )\n    def forward(self, x):\n        return self.classifier(self.features(x))\n\`\`\`\n\n## 六、CNN vs ViT\n\n| 维度 | CNN | ViT |\n|------|-----|-----|\n| 归纳偏置 | 局部性、平移不变 | 弱（无先验） |\n| 数据效率 | 小数据好 | 大数据好 |\n| 计算复杂度 | O(n) | O(n²) |\n| 代表 | ResNet | ViT、Swin |\n\n> 关键洞察：CNN 的"局部连接 + 权重共享"是视觉问题的归纳偏置，在小数据上优势明显。ConvNeXt 证明现代化的 CNN 仍能匹敌 ViT。`,
+  },
+  {
+    id: 'res22', type: 'mindmap', title: '机器学习算法分类总览',
+    chapter: '核心技术 · 机器学习', summary: '可视化梳理监督、无监督、半监督、强化、自监督五大学习范式及其代表算法，含适用场景与选型建议。',
+    difficulty: '入门', createdAt: '5 天前',
+    content: `# 机器学习算法分类总览\n\n本思维导图系统梳理机器学习五大学习范式与代表算法，帮助你建立全景认知。\n\n## 一、学习范式分类\n\n\`\`\`\n机器学习\n├── 监督学习（有标签）\n│   ├── 分类：逻辑回归、SVM、决策树、RF、CNN\n│   └── 回归：线性回归、岭回归、Lasso、GBDT\n├── 无监督学习（无标签）\n│   ├── 聚类：K-Means、DBSCAN、层次聚类\n│   ├── 降维：PCA、t-SNE、UMAP\n│   └── 密度估计：GMM、KDE\n├── 半监督学习（少量标签）\n│   └── 自训练、协同训练、图半监督\n├── 强化学习（奖励信号）\n│   └── Q-Learning、SARSA、DQN、PPO\n└── 自监督学习（自构造标签）\n    ├── 对比学习：SimCLR、MoCo\n    ├── 掩码建模：BERT、MAE\n    └── 下一 token：GPT\n\`\`\`\n\n## 二、监督学习代表算法\n\n| 算法 | 类型 | 优势 | 适用 |\n|------|------|------|------|\n| 逻辑回归 | 分类 | 简单可解释 | 线性可分 |\n| SVM | 分类 | 小样本强 | 中等数据 |\n| 决策树 | 分类/回归 | 可解释 | 表格数据 |\n| 随机森林 | 分类/回归 | 抗过拟合 | 通用 |\n| XGBoost | 分类/回归 | SOTA | 比赛 |\n| CNN | 分类 | 图像强 | 视觉 |\n| RNN/Transformer | 分类/生成 | 序列强 | NLP |\n\n## 三、无监督学习代表算法\n\n### 聚类\n- K-Means：球形簇\n- DBSCAN：任意形状、自动去噪\n- 层次聚类：树状结构\n\n### 降维\n- PCA：线性、快\n- t-SNE：非线性、可视化\n- UMAP：快且保留全局结构\n\n## 四、强化学习\n\n| 算法 | 类型 | 代表应用 |\n|------|------|----------|\n| Q-Learning | 无模型 | 网格世界 |\n| DQN | 深度 | Atari |\n| PPO | 策略梯度 | Dota 2 |\n| SAC | 连续控制 | 机器人 |\n\n## 五、自监督学习\n\n大模型预训练的基础：\n- BERT：掩码语言建模 MLM\n- GPT：因果语言建模 CLM\n- MAE：掩码自编码器（视觉）\n- SimCLR：对比学习\n\n## 六、选型决策\n\n1. 有标签？→ 监督学习\n2. 无标签、想分组？→ 聚类\n3. 无标签、想压缩？→ 降维\n4. 有奖励信号？→ 强化学习\n5. 海量无标注？→ 自监督预训练\n\n> 思维导图要点：机器学习的核心是"从数据中学习"。有无标签、标签形式、数据规模决定了范式选择。自监督学习是大模型时代的关键突破。`,
+  },
+  {
+    id: 'res24', type: 'code', title: 'Transformer 自注意力 PyTorch 实现',
+    chapter: '核心技术 · NLP', summary: '从零实现多头自注意力、位置编码、前馈网络与完整 Transformer Encoder，含维度检查与调试技巧。',
+    difficulty: '高阶', createdAt: '昨天 14:00', duration: '约 28 分钟',
+    content: `# Transformer 自注意力 PyTorch 实现\n\n本 Notebook 从零实现 Transformer 核心组件，帮助你深入理解注意力机制。\n\n## 一、Scaled Dot-Product Attention\n\n\`Attention(Q, K, V) = softmax(QKᵀ / √d_k) · V\`\n\n\`\`\`python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport math\n\nclass ScaledDotProductAttention(nn.Module):\n    def __init__(self):\n        super().__init__()\n\n    def forward(self, Q, K, V, mask=None):\n        # Q, K, V: (batch, heads, seq, d_k)\n        d_k = Q.size(-1)\n        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)\n        if mask is not None:\n            scores = scores.masked_fill(mask == 0, float('-inf'))\n        attn = F.softmax(scores, dim=-1)\n        output = torch.matmul(attn, V)\n        return output, attn\n\`\`\`\n\n## 二、多头注意力\n\n\`\`\`python\nclass MultiHeadAttention(nn.Module):\n    def __init__(self, d_model=512, num_heads=8):\n        super().__init__()\n        assert d_model % num_heads == 0\n        self.d_k = d_model // num_heads\n        self.num_heads = num_heads\n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        self.W_o = nn.Linear(d_model, d_model)\n        self.attention = ScaledDotProductAttention()\n\n    def forward(self, x, mask=None):\n        batch, seq, _ = x.shape\n        # 线性投影 + 分头\n        Q = self.W_q(x).view(batch, seq, self.num_heads, self.d_k).transpose(1, 2)\n        K = self.W_k(x).view(batch, seq, self.num_heads, self.d_k).transpose(1, 2)\n        V = self.W_v(x).view(batch, seq, self.num_heads, self.d_k).transpose(1, 2)\n        # 注意力\n        out, attn = self.attention(Q, K, V, mask)\n        # 合并头\n        out = out.transpose(1, 2).contiguous().view(batch, seq, -1)\n        return self.W_o(out)\n\`\`\`\n\n## 三、位置编码\n\n\`\`\`python\nclass PositionalEncoding(nn.Module):\n    def __init__(self, d_model=512, max_len=5000):\n        super().__init__()\n        pe = torch.zeros(max_len, d_model)\n        position = torch.arange(0, max_len).unsqueeze(1).float()\n        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))\n        pe[:, 0::2] = torch.sin(position * div_term)\n        pe[:, 1::2] = torch.cos(position * div_term)\n        self.register_buffer('pe', pe.unsqueeze(0))\n\n    def forward(self, x):\n        return x + self.pe[:, :x.size(1)]\n\`\`\`\n\n## 四、前馈网络 + 残差 + LayerNorm\n\n\`\`\`python\nclass FeedForward(nn.Module):\n    def __init__(self, d_model=512, d_ff=2048):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.GELU(),\n            nn.Linear(d_ff, d_model),\n        )\n    def forward(self, x):\n        return self.net(x)\n\nclass TransformerBlock(nn.Module):\n    def __init__(self, d_model=512, num_heads=8, d_ff=2048, dropout=0.1):\n        super().__init__()\n        self.attn = MultiHeadAttention(d_model, num_heads)\n        self.ff = FeedForward(d_model, d_ff)\n        self.ln1 = nn.LayerNorm(d_model)\n        self.ln2 = nn.LayerNorm(d_model)\n        self.dropout = nn.Dropout(dropout)\n\n    def forward(self, x, mask=None):\n        # 残差 + LayerNorm（Pre-LN 更稳定）\n        x = x + self.dropout(self.attn(self.ln1(x), mask))\n        x = x + self.dropout(self.ff(self.ln2(x)))\n        return x\n\`\`\`\n\n## 五、完整 Transformer Encoder\n\n\`\`\`python\nclass TransformerEncoder(nn.Module):\n    def __init__(self, vocab_size=30000, d_model=512, num_heads=8,\n                 d_ff=2048, num_layers=6, dropout=0.1, max_len=512):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, d_model)\n        self.pos_enc = PositionalEncoding(d_model, max_len)\n        self.blocks = nn.ModuleList([\n            TransformerBlock(d_model, num_heads, d_ff, dropout)\n            for _ in range(num_layers)\n        ])\n        self.ln = nn.LayerNorm(d_model)\n\n    def forward(self, x, mask=None):\n        x = self.embedding(x) * math.sqrt(self.embedding.embedding_dim)\n        x = self.pos_enc(x)\n        for block in self.blocks:\n            x = block(x, mask)\n        return self.ln(x)\n\`\`\`\n\n## 六、维度检查\n\n\`\`\`python\nmodel = TransformerEncoder(vocab_size=1000, d_model=64, num_heads=4, d_ff=256, num_layers=2)\nx = torch.randint(0, 1000, (2, 10))  # (batch, seq)\nout = model(x)\nprint('输入:', x.shape)\nprint('输出:', out.shape)  # (2, 10, 64)\nprint('参数量:', sum(p.numel() for p in model.parameters()))\n\`\`\`\n\n## 七、关键调试技巧\n\n1. **检查维度**：每步打印 shape，确保 (batch, heads, seq, d_k)\n2. **检查梯度**：\`torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)\`\n3. **预热学习率**：前 4000 步线性增加\n4. **用 Pre-LN**：比 Post-LN 训练更稳定\n\n## 八、思考题\n1. 为什么除以 √d_k？不除会怎样？\n2. 多头注意力相比单头有何优势？\n3. Pre-LN 与 Post-LN 的差异？\n4. 如何实现因果掩码（causal mask）？`,
+  },
+  {
+    id: 'res25', type: 'reading', title: 'BERT 与 GPT 预训练模型对比阅读',
+    chapter: '核心技术 · NLP', summary: '对比精读 BERT（Encoder-only）与 GPT（Decoder-only）两篇论文，剖析架构差异、训练目标、适用场景与衍生模型生态。',
+    difficulty: '高阶', createdAt: '1 周前', duration: '约 30 分钟',
+    content: `# BERT 与 GPT 预训练模型对比阅读\n\nBERT 与 GPT 是预训练语言模型两大范式，分别代表 Encoder-only 与 Decoder-only 路线。本文对比精读两篇原论文。\n\n## 一、论文信息\n\n| 维度 | BERT | GPT |\n|------|------|-----|\n| 论文 | *BERT: Pre-training of Deep Bidirectional Transformers* | *Language Models are Unsupervised Multitask Learners* |\n| 机构 | Google | OpenAI |\n| 年份 | 2018 | 2019 (GPT-2) |\n| 架构 | Encoder-only | Decoder-only |\n| 目标 | 掩码语言建模 MLM | 因果语言建模 CLM |\n\n## 二、架构对比\n\n### BERT：双向理解\n\n- 使用 Transformer **Encoder**\n- 输入可双向关注（每个 token 看左右两侧）\n- 适合**理解**任务：分类、NER、QA\n\n### GPT：单向生成\n\n- 使用 Transformer **Decoder**\n- 因果掩码：每个 token 只能看左侧（过去）\n- 适合**生成**任务：对话、翻译、写作\n\n### 注意力掩码差异\n\n\`\`\`\nBERT (全可见):\n[1 1 1 1]\n[1 1 1 1]\n[1 1 1 1]\n[1 1 1 1]\n\nGPT (因果掩码):\n[1 0 0 0]\n[1 1 0 0]\n[1 1 1 0]\n[1 1 1 1]\n\`\`\`\n\n## 三、预训练任务\n\n### BERT：MLM + NSP\n\n1. **掩码语言建模（MLM）**：随机遮蔽 15% token，预测被遮蔽词\n2. **下一句预测（NSP）**：判断两句话是否相邻（后被 RoBERTa 证明无效）\n\n### GPT：CLM\n\n预测下一 token：\`P(w_t | w_1, ..., w_{t-1})\`\n\n自回归生成，天然适合生成任务。\n\n## 四、微调方式\n\n### BERT：加分类头\n\n\`\`\`\n[CLS] 文本 [SEP] → BERT → [CLS] 向量 → Linear → 类别\n\`\`\`\n\n适合句级分类、token 级标注、QA 答案抽取。\n\n### GPT：Prompt 引导\n\n\`\`\`\n任务描述 + 示例 + 输入 → GPT → 生成输出\n\`\`\`\n\n无需梯度更新（In-Context Learning），适合零样本/少样本。\n\n## 五、衍生模型生态\n\n### BERT 家族\n\n| 模型 | 改进 |\n|------|------|\n| RoBERTa | 去 NSP、更多数据、动态 MLM |\n| ALBERT | 参数共享、降参 |\n| DeBERTa | 解耦注意力 |\n| ELECTRA | 替换检测代替 MLM |\n| ERNIE | 知识增强 |\n\n### GPT 家族\n\n| 模型 | 规模 | 创新 |\n|------|------|------|\n| GPT-1 | 1.17 亿 | 预训练+微调范式 |\n| GPT-2 | 15 亿 | 零样本能力 |\n| GPT-3 | 1750 亿 | 涌现、ICL |\n| InstructGPT | - | RLHF 对齐 |\n| ChatGPT/GPT-4 | - | 多模态、工具调用 |\n\n## 六、能力对比\n\n| 能力 | BERT | GPT |\n|------|------|-----|\n| 文本分类 | 强 | 中（需 prompt） |\n| 序列标注 | 强 | 中 |\n| 生成 | 弱 | 强 |\n| 零样本 | 弱 | 强 |\n| 推理 | 中 | 强（大模型） |\n| 效率 | 高 | 中 |\n\n## 七、选型建议\n\n- **理解任务**（分类、NER、QA 抽取）→ BERT 系列\n- **生成任务**（对话、写作、翻译）→ GPT 系列\n- **零样本/少样本** → GPT 大模型\n- **资源受限**→ DistilBERT、小 GPT\n- **通用 Agent** → GPT-4、Claude\n\n## 八、关键洞察\n\n> BERT 与 GPT 的本质差异在于**注意力方向**：双向 vs 单向。BERT 牺牲生成能力换取深度理解，GPT 牺牲双向信息换取自回归生成。大模型时代，GPT 路线凭借 Scaling Law 与涌现能力成为主流，但 BERT 在专项理解任务上仍高效。\n\n## 九、推荐延伸\n1. *RoBERTa*：BERT 的稳健改进\n2. *GPT-3*：Scaling Law 与涌现\n3. *T5*：统一 Encoder-Decoder\n4. *InstructGPT*：RLHF 对齐`,
+  },
+  {
+    id: 'res26', type: 'doc', title: '强化学习基础：MDP、值迭代与策略梯度',
+    chapter: '核心技术 · 强化学习', summary: '从马尔可夫决策过程到值迭代、策略梯度、Actor-Critic，系统讲解强化学习三大流派与核心算法。',
+    difficulty: '高阶', createdAt: '1 周前', duration: '约 26 分钟',
+    content: `# 强化学习基础：MDP、值迭代与策略梯度\n\n本文系统介绍强化学习理论基础，从 MDP 到三大算法流派。\n\n## 一、强化学习框架\n\n### 1. 智能体-环境交互\n\n\`\`\`\n状态 s_t → 动作 a_t → 奖励 r_t → 状态 s_{t+1} → ...\n\`\`\`\n\n目标：最大化期望累积折扣奖励\n\n\`J(π) = E[Σ_{t=0}^∞ γ^t r_t]\`\n\n### 2. 核心概念\n\n| 概念 | 含义 |\n|------|------|\n| 策略 π(a|s) | 状态到动作的映射 |\n| 值函数 V(s) | 状态 s 的期望回报 |\n| 动作值 Q(s,a) | s 执行 a 的期望回报 |\n| 优势 A(s,a) | Q(s,a) - V(s) |\n| 折扣 γ | 未来奖励权重 (0,1) |\n\n## 二、马尔可夫决策过程（MDP）\n\n五元组 \`(S, A, P, R, γ)\`：\n- S：状态集\n- A：动作集\n- P(s'|s,a)：转移概率\n- R(s,a)：奖励\n- γ：折扣因子\n\n**马尔可夫性**：未来只依赖当前状态。\n\n## 三、值迭代与策略迭代\n\n### 1. 贝尔曼方程\n\n\`V*(s) = max_a [R(s,a) + γ Σ P(s'|s,a) V*(s')]\`\n\n\`Q*(s,a) = R(s,a) + γ Σ P(s'|s,a) max_a' Q*(s',a')\`\n\n### 2. 值迭代\n\n\`\`\`python\ndef value_iteration(env, gamma=0.99, theta=1e-6):\n    V = np.zeros(env.nS)\n    while True:\n        delta = 0\n        for s in range(env.nS):\n            v = V[s]\n            V[s] = max([sum([p*(r + gamma*V[s_]) for p, s_, r, _ in env.P[s][a]])\n                        for a in range(env.nA)])\n            delta = max(delta, abs(v - V[s]))\n        if delta < theta:\n            break\n    return V\n\`\`\`\n\n### 3. 策略迭代\n\n评估 → 改进循环，保证收敛到最优策略。\n\n## 四、Q-Learning（无模型）\n\n\`Q(s,a) ← Q(s,a) + α[r + γ max_a' Q(s',a') - Q(s,a)]\`\n\n- **off-policy**：用贪婪策略学习，用 ε-greedy 探索\n- 收敛条件：每个 (s,a) 无限次访问、学习率衰减\n\n## 五、策略梯度（Policy Gradient）\n\n### 1. 目标\n\n直接参数化策略 \`π_θ(a|s)\`，最大化期望回报：\n\n\`J(θ) = E_{τ~π_θ}[Σ r_t]\`\n\n### 2. REINFORCE\n\n\`∇J(θ) = E[∇log π_θ(a_t|s_t) · G_t]\`\n\nG_t 是累积回报。\n\n### 3. Actor-Critic\n\n- **Actor**：学习策略 π_θ\n- **Critic**：学习值函数 V_φ 评估状态\n- 用优势函数 \`A(s,a) = Q(s,a) - V(s)\` 降低方差\n\n## 六、现代深度 RL 算法\n\n| 算法 | 类型 | 特点 |\n|------|------|------|\n| DQN | 值函数 | 经验回放 + 目标网络 |\n| DDPG | Actor-Critic | 连续动作 |\n| PPO | 策略梯度 | 截断目标、稳定 |\n| SAC | 最大熵 | 探索 + 稳定 |\n| A3C | 异步 | 多线程 |\n\n### PPO 核心\n\n\`L = E[min(r_t(θ) A_t, clip(r_t(θ), 1-ε, 1+ε) A_t)]\`\n\n截断防止策略更新过大，是当前最常用的 RL 算法。\n\n## 七、算法选择\n\n| 场景 | 推荐算法 |\n|------|----------|\n| 离散动作 + 小状态 | Q-Learning |\n| 离散动作 + 大状态 | DQN |\n| 连续动作 | DDPG / SAC |\n| 通用稳定 | PPO |\n| 多智能体 | MAPPO |\n\n## 八、挑战\n\n- **样本效率低**：需百万次交互\n- **奖励设计困难**：奖励塑形、稀疏奖励\n- **探索-利用权衡**：ε-greedy、好奇心驱动\n- **训练不稳定**：超参敏感、catastrophic forgetting\n\n> 关键洞察：强化学习三大流派——值函数（Q-Learning）、策略梯度（REINFORCE）、Actor-Critic——各有优劣。PPO 凭借稳定性成为工业主流，但样本效率仍是核心瓶颈。`,
+  },
+  {
+    id: 'res27', type: 'mindmap', title: 'AI 应用领域全景图',
+    chapter: '应用领域 · 全景', summary: '可视化梳理医疗、金融、自动驾驶、推荐系统、教育、工业、创作七大 AI 应用领域，含代表技术、产品与挑战。',
+    difficulty: '入门', createdAt: '3 天前',
+    content: `# AI 应用领域全景图\n\n本思维导图系统梳理 AI 七大主流应用领域，帮助你建立产业落地全景认知。\n\n## 一、应用领域总览\n\n\`\`\`\nAI 应用\n├── 医疗健康\n│   ├── 医学影像诊断\n│   ├── 药物发现\n│   └── 电子病历\n├── 金融科技\n│   ├── 风控反欺诈\n│   ├── 量化交易\n│   └── 智能投顾\n├── 自动驾驶\n│   ├── 感知\n│   ├── 决策规划\n│   └── 控制\n├── 推荐系统\n│   ├── 内容推荐\n│   ├── 广告投放\n│   └── 电商搜索\n├── 智能教育\n│   ├── 个性化学习\n│   ├── 自动批改\n│   └── 智能答疑\n├── 工业制造\n│   ├── 缺陷检测\n│   ├── 预测维护\n│   └── 机器人\n└── 内容创作\n    ├── 文本生成\n    ├── 图像生成\n    └── 视频生成\n\`\`\`\n\n## 二、医疗健康\n\n### 代表技术\n- 医学影像：CNN 分类（皮肤癌、糖网病变）\n- 药物发现：AlphaFold 蛋白质结构预测\n- 电子病历：NLP 信息抽取\n\n### 代表产品\n- Google LYNA（淋巴结转移检测）\n- DeepMind AlphaFold\n- IBM Watson Oncology\n\n### 挑战\n- 数据隐私（HIPAA）\n- 可解释性要求高\n- 监管严格（FDA）\n\n## 三、金融科技\n\n### 代表技术\n- 风控：图神经网络 + 异常检测\n- 量化：强化学习 + 时间序列\n- 投顾：推荐系统 + 风险评估\n\n### 代表产品\n- 蚂蚁金服风控\n- Renaissance Technologies 量化\n- 招商银行 AI 投顾\n\n### 挑战\n- 数据不平衡（欺诈少）\n- 监管合规\n- 模型可解释性\n\n## 四、自动驾驶\n\n### 技术栈\n- 感知：摄像头、激光雷达、毫米波雷达\n- 决策：行为预测、路径规划\n- 控制：横纵向控制\n\n### 等级\n| 级别 | 描述 | 代表 |\n|------|------|------|\n| L2 | 辅助驾驶 | 特斯拉 AP |\n| L3 | 条件自动 | 奔驰 Drive Pilot |\n| L4 | 高度自动 | Waymo、萝卜快跑 |\n| L5 | 完全自动 | 研发中 |\n\n### 挑战\n- 长尾场景\n- 安全性要求极高\n- 法规与伦理\n\n## 五、推荐系统\n\n### 核心技术\n- 协同过滤（User-CF、Item-CF）\n- 深度学习（Wide&Deep、DIN）\n- 强化学习（实时反馈）\n\n### 代表产品\n- 抖音、YouTube、Netflix\n- 淘宝、京东\n- 美团、大众点评\n\n### 挑战\n- 冷启动\n- 信息茧房\n- 实时性\n\n## 六、智能教育\n\n### 代表技术\n- 知识追踪（DKT、SAKT）\n- 个性化推荐\n- 自动批改（OCR + NLP）\n\n### 代表产品\n- 智学伴（本项目）\n- Khan Academy、Duolingo\n- Coursera、松鼠 AI\n\n### 挑战\n- 知识图谱构建\n- 个性化平衡\n- 教育公平\n\n## 七、工业制造\n\n### 代表技术\n- 缺陷检测：CNN 视觉\n- 预测维护：时间序列异常检测\n- 机器人：强化学习控制\n\n### 代表产品\n- 富士康工厂检测\n- 西门子 MindSphere\n- 波士顿动力\n\n## 八、内容创作\n\n### 代表技术\n- 文本：GPT、Claude\n- 图像：Stable Diffusion、DALL·E\n- 视频：Sora、Runway\n- 音乐：Suno、AIVA\n\n### 代表产品\n- ChatGPT、Notion AI\n- Midjourney、Stable Diffusion\n- Sora、Runway\n\n### 挑战\n- 版权争议\n- 深度伪造\n- 就业冲击\n\n## 九、跨领域共性挑战\n\n| 挑战 | 影响 |\n|------|------|\n| 数据质量 | 决定模型上限 |\n| 可解释性 | 信任与合规 |\n| 公平性 | 反歧视 |\n| 隐私保护 | 法规要求 |\n| 安全性 | 对抗攻击 |\n\n> 思维导图要点：AI 已渗透到各行各业，但落地核心是"**技术 + 数据 + 场景**"三角。理解每个领域的特殊性，才能找到 AI 的真正价值点。`,
+  },
+  {
+    id: 'res29', type: 'code', title: '简单神经网络从零实现（NumPy）',
+    chapter: '核心技术 · 深度学习', summary: '不依赖任何框架，纯 NumPy 实现两层神经网络的前向传播、反向传播、梯度下降与训练循环，理解深度学习本质。',
+    difficulty: '进阶', createdAt: '2 天前', duration: '约 18 分钟',
+    content: `# 简单神经网络从零实现（NumPy）\n\n本 Notebook 不依赖 PyTorch/TensorFlow，纯 NumPy 实现神经网络，帮助你理解深度学习的本质。\n\n## 一、网络结构\n\n\`\`\`\n输入层 (2) → 隐藏层 (4, ReLU) → 输出层 (1, Sigmoid)\n\`\`\`\n\n解决 XOR 问题。\n\n## 二、初始化\n\n\`\`\`python\nimport numpy as np\n\nclass SimpleNN:\n    def __init__(self, input_size=2, hidden_size=4, output_size=1):\n        # He 初始化\n        self.W1 = np.random.randn(input_size, hidden_size) * np.sqrt(2./input_size)\n        self.b1 = np.zeros((1, hidden_size))\n        self.W2 = np.random.randn(hidden_size, output_size) * np.sqrt(2./hidden_size)\n        self.b2 = np.zeros((1, output_size))\n\n    def relu(self, x):\n        return np.maximum(0, x)\n\n    def sigmoid(self, x):\n        return 1 / (1 + np.exp(-np.clip(x, -500, 500)))\n\`\`\`\n\n## 三、前向传播\n\n\`\`\`python\n    def forward(self, X):\n        # 隐藏层\n        self.z1 = X @ self.W1 + self.b1\n        self.a1 = self.relu(self.z1)\n        # 输出层\n        self.z2 = self.a1 @ self.W2 + self.b2\n        self.a2 = self.sigmoid(self.z2)\n        return self.a2\n\`\`\`\n\n## 四、反向传播（手推梯度）\n\n\`\`\`python\n    def backward(self, X, y, lr=0.1):\n        m = X.shape[0]\n        # 输出层梯度\n        dz2 = self.a2 - y  # sigmoid + BCE 的简化梯度\n        dW2 = self.a1.T @ dz2 / m\n        db2 = np.sum(dz2, axis=0, keepdims=True) / m\n        # 隐藏层梯度（ReLU 导数）\n        da1 = dz2 @ self.W2.T\n        dz1 = da1 * (self.z1 > 0)  # ReLU 导数\n        dW1 = X.T @ dz1 / m\n        db1 = np.sum(dz1, axis=0, keepdims=True) / m\n        # 参数更新\n        self.W2 -= lr * dW2\n        self.b2 -= lr * db2\n        self.W1 -= lr * dW1\n        self.b1 -= lr * db1\n\`\`\`\n\n## 五、训练循环\n\n\`\`\`python\n# XOR 数据\nX = np.array([[0,0], [0,1], [1,0], [1,1]])\ny = np.array([[0], [1], [1], [0]])\n\nnn = SimpleNN()\nfor epoch in range(10000):\n    pred = nn.forward(X)\n    loss = -np.mean(y * np.log(pred + 1e-8) + (1-y) * np.log(1-pred + 1e-8))\n    nn.backward(X, y, lr=0.5)\n    if epoch % 1000 == 0:\n        print(f'Epoch {epoch}, Loss: {loss:.4f}')\n\nprint('预测:', nn.forward(X).flatten())\n# 输出应接近 [0, 1, 1, 0]\n\`\`\`\n\n## 六、梯度检查\n\n验证手推梯度是否正确：\n\n\`\`\`python\ndef gradient_check(nn, X, y, epsilon=1e-7):\n    # 数值梯度\n    for param, name in [(nn.W1, 'W1'), (nn.W2, 'W2')]:\n        for i in range(min(3, param.size)):\n            orig = param.flat[i]\n            param.flat[i] = orig + epsilon\n            loss_p = -np.mean(y * np.log(nn.forward(X) + 1e-8) + (1-y) * np.log(1-nn.forward(X) + 1e-8))\n            param.flat[i] = orig - epsilon\n            loss_m = -np.mean(y * np.log(nn.forward(X) + 1e-8) + (1-y) * np.log(1-nn.forward(X) + 1e-8))\n            param.flat[i] = orig\n            num_grad = (loss_p - loss_m) / (2 * epsilon)\n            print(f'{name}[{i}] 数值梯度: {num_grad:.6f}')\n\`\`\`\n\n## 七、关键洞察\n\n### 1. 反向传播本质\n> 反向传播 = 链式法则 + 中间值复用。复杂度仅与前向相当。\n\n### 2. 激活函数选择\n| 函数 | 优点 | 缺点 |\n|------|------|------|\n| Sigmoid | 输出概率 | 梯度消失 |\n| ReLU | 计算快 | 神经元死亡 |\n| Tanh | 零中心 | 仍饱和 |\n\n### 3. 初始化的重要性\n- 全零初始化 → 所有神经元学相同特征\n- Xavier：适合 tanh/sigmoid\n- He：适合 ReLU\n\n### 4. 学习率影响\n- 过大：震荡发散\n- 过小：收敛慢\n- 自适应：Adam、AdamW\n\n## 八、从 NumPy 到 PyTorch\n\n\`\`\`python\n# PyTorch 等价实现（自动梯度）\nimport torch\nW1 = torch.randn(2, 4, requires_grad=True)\nloss = ...  # 前向\nloss.backward()  # 自动反向传播\n\`\`\`\n\n> 关键洞察：深度学习框架（PyTorch/TensorFlow）本质就是**自动微分 + GPU 加速**。理解了 NumPy 版本，就理解了所有框架的核心。`,
+  },
+  {
+    id: 'res30', type: 'reading', title: 'AI 科学背景：神经科学与认知科学交叉阅读',
+    chapter: '科学背景 · 交叉学科', summary: '精选神经科学与认知科学经典文献，梳理 AI 与脑科学、认知心理学、哲学的交叉，理解智能的科学根源。',
+    difficulty: '高阶', createdAt: '1 周前', duration: '约 24 分钟',
+    content: `# AI 科学背景：神经科学与认知科学交叉阅读\n\n本文精选神经科学与认知科学经典文献，梳理 AI 的科学根源与跨学科启发。\n\n## 一、AI 的科学根源\n\nAI 不是凭空诞生，而是汲取了多学科养分：\n\n\`\`\`\n神经科学 → 神经元模型 → 连接主义\n认知科学 → 符号处理 → 符号主义\n控制论 → 反馈机制 → 行为主义\n哲学 → 心智问题 → 智能本质\n数学 → 概率/逻辑 → 算法基础\n\`\`\`\n\n## 二、神经科学启发\n\n### 1. M-P 神经元模型（1943）\n\nMcCulloch & Pitts 受生物神经元启发，提出首个数学神经元模型：\n\n\`y = f(Σ w_i x_i - θ)\`\n\n这是所有神经网络的基础。\n\n### 2. 感知机（1957）\n\nRosenblatt 的感知机受视网膜处理启发，首次实现可学习神经网络。\n\n### 3. Hubel & Wiesel 的猫视觉皮层实验\n\n- 发现简单细胞（检测边缘）→ 复杂细胞（运动）→ 超复杂细胞\n- 直接启发 CNN 的层级特征提取\n- LeCun 明确表示 CNN 受此启发\n\n### 4. 海马体与记忆\n- 长时程增强 LTP：学习记忆的细胞机制\n- 启发 Hopfield 网络、注意力机制\n\n## 三、认知科学启发\n\n### 1. 物理符号系统假设\n\nNewell & Simon（1976）：物理符号系统具备产生通用智能的充分必要条件。\n\n这是符号主义 AI 的理论基石。\n\n### 2. 联结主义认知模型\n\nRumelhart & McClelland《并行分布式处理》（PDP, 1986）：\n- 认知由简单单元的并行交互涌现\n- 反向传播算法的普及载体\n\n### 3. 注意力机制\n\n认知心理学的"注意"概念直接启发 Transformer 的注意力：\n- 选择性注意：聚焦相关信息\n- 多头注意力：多通道并行注意\n\n## 四、经典文献选读\n\n### 1. 神经科学\n\n| 文献 | 核心思想 | AI 启发 |\n|------|----------|--------|\n| McCulloch & Pitts (1943) | 神经元数学模型 | M-P 模型 |\n| Hubel & Wiesel (1959) | 视觉皮层层级 | CNN 架构 |\n| O'Keefe (1978) | 海马位置细胞 | 空间表示 |\n| Hawkins (2004) | 层级时序记忆 HTM | 类脑 AI |\n\n### 2. 认知科学\n\n| 文献 | 核心思想 | AI 启发 |\n|------|----------|--------|\n| Newell & Simon (1976) | 物理符号系统 | 符号主义 |\n| Rumelhart et al. (1986) | PDP | 反向传播 |\n| Baddeley (1992) | 工作记忆模型 | 注意力 |\n| Kahneman (2011) | 系统 1/2 思考 | 推理与直觉 |\n\n### 3. 哲学\n\n| 文献 | 核心思想 | AI 启发 |\n|------|----------|--------|\n| Turing (1950) | 机器能否思考 | 图灵测试 |\n| Searle (1980) | 中文房间 | 理解的本质 |\n| Dennett (1991) | 意识解释 | 意识建模 |\n| Chalmers (1995) | 意识难问题 | 主观体验 |\n\n## 五、跨学科启示\n\n### 1. 神经形态计算\n\n受大脑启发设计芯片：\n- IBM TrueNorth\n- Intel Loihi\n- 脉冲神经网络 SNN\n\n### 2. 具身智能\n\n认知科学认为智能离不开身体：\n- Brooks 包容式架构\n- RT-2、π0 具身模型\n- 机器人学习\n\n### 3. 意识与 AI\n\n| 立场 | 主张 |\n|------|------|\n| 强 AI | AI 可有意识 |\n| 弱 AI | AI 仅模拟 |\n| 中文房间 | 语法不产生语义 |\n| 功能主义 | 意识是信息处理 |\n\n## 六、未来方向\n\n- **脑机接口**：Neuralink、恢复运动\n- **类脑计算**：更低功耗的 AI\n- **认知架构**：SOAR、ACT-R\n- **通用人工智能 AGI**：跨学科融合\n\n## 七、关键洞察\n\n> AI 不是计算机科学的独角戏，而是**神经科学、认知科学、哲学、数学的合奏**。理解智能的科学根源，才能超越工程技巧，思考 AGI 的真正路径。当代大模型的成功某种程度上验证了联结主义，但意识、推理、因果等深层问题仍待跨学科突破。\n\n## 八、推荐延伸\n1. *On Intelligence*（Hawkins）：大脑预测编码理论\n2. *The Emperor's New Mind*（Penrose）：量子意识\n3. *Thinking, Fast and Slow*（Kahneman）：双系统理论\n4. *The Mind's I*（Hofstadter & Dennett）：心智哲学选集`,
+  },
+];
+
+// 学习路径节点（基于知识库 8 大章节完整脉络）
+export interface PathNode {
+  id: string;
+  label: string;
+  chapter: string;
+  mastery: number;
+  status: 'done' | 'current' | 'todo' | 'review';
+}
+
+export interface PathEdge {
+  from: string;
+  to: string;
+}
+
+export const pathNodes: PathNode[] = [
+  { id: 'n1',  label: '数学基础',       chapter: '线性代数/概率论/微积分', mastery: 92, status: 'done' },
+  { id: 'n2',  label: 'Python 编程',    chapter: '语法/NumPy/Pandas',     mastery: 85, status: 'done' },
+  { id: 'n3',  label: 'AI 基础概念',    chapter: '强弱AI/三大流派/属性',  mastery: 78, status: 'done' },
+  { id: 'n4',  label: '发展历史',       chapter: '达特茅斯/两次寒冬',      mastery: 80, status: 'done' },
+  { id: 'n5',  label: '科学背景',       chapter: '神经科学/哲学/心理学',   mastery: 65, status: 'done' },
+  { id: 'n6',  label: '知识表示',       chapter: '谓词逻辑/语义网络/本体', mastery: 70, status: 'done' },
+  { id: 'n7',  label: '搜索技术',       chapter: 'BFS/DFS/A*/博弈搜索',    mastery: 58, status: 'review' },
+  { id: 'n8',  label: '知识图谱',       chapter: '三元组/抽取/推理',       mastery: 0,  status: 'todo' },
+  { id: 'n9',  label: '机器学习',       chapter: '监督/无监督/强化',       mastery: 72, status: 'current' },
+  { id: 'n10', label: '决策树与 SVM',   chapter: 'ID3/C4.5/CART/SVM',     mastery: 42, status: 'review' },
+  { id: 'n11', label: '深度学习基础',   chapter: '感知机/反向传播/激活',    mastery: 0,  status: 'todo' },
+  { id: 'n12', label: '计算机视觉',     chapter: 'CNN/YOLO/分割',         mastery: 0,  status: 'todo' },
+  { id: 'n13', label: 'NLP 与 Transformer', chapter: '词向量/注意力/BERT', mastery: 0, status: 'todo' },
+  { id: 'n14', label: '大语言模型',     chapter: '预训练/SFT/RLHF',       mastery: 0,  status: 'todo' },
+  { id: 'n15', label: '智能体',         chapter: 'PEAS/MAS/LangGraph',    mastery: 0,  status: 'todo' },
+  { id: 'n16', label: '应用与伦理',     chapter: '七大领域/对齐/未来',     mastery: 0,  status: 'todo' },
+];
+
+export const pathEdges: PathEdge[] = [
+  // 基础准备层
+  { from: 'n1', to: 'n9' },
+  { from: 'n2', to: 'n9' },
+  // 概念层
+  { from: 'n1', to: 'n3' },
+  { from: 'n3', to: 'n4' },
+  { from: 'n4', to: 'n5' },
+  // 符号主义分支
+  { from: 'n3', to: 'n6' },
+  { from: 'n6', to: 'n7' },
+  { from: 'n6', to: 'n8' },
+  // 机器学习主线
+  { from: 'n7', to: 'n9' },
+  { from: 'n9', to: 'n10' },
+  // 深度学习分支
+  { from: 'n10', to: 'n11' },
+  { from: 'n11', to: 'n12' },
+  { from: 'n11', to: 'n13' },
+  // 大模型与智能体
+  { from: 'n12', to: 'n14' },
+  { from: 'n13', to: 'n14' },
+  { from: 'n14', to: 'n15' },
+  // 应用与伦理
+  { from: 'n15', to: 'n16' },
+  { from: 'n8', to: 'n16' },
+];
+
+// 答疑对话
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  modalities?: ('text' | 'diagram' | 'video')[];
+  timestamp: string;
+}
+
+export const initialTutorMessages: ChatMessage[] = [
+  {
+    id: 't1', role: 'assistant',
+    content: '你好！我是答疑智能体。学习《人工智能导论》过程中遇到任何问题，无论是**基础概念辨析**（如三大流派）、**历史脉络**（如达特茅斯会议）、**核心算法**（如 A*、反向传播、Transformer）还是**代码实现**，都可以问我。我会结合你当前的章节提供文字解析、图解说明或短视频讲解。',
+    timestamp: '09:00',
+  },
+];
+
+export const tutorSuggestions = [
+  '符号主义、连接主义、行为主义有何区别？',
+  'A* 算法为什么保证最优解？',
+  'Transformer 的自注意力机制是什么？',
+  '大语言模型的预训练范式是什么？',
+  '什么是反向传播的链式法则？',
+  '决策树如何防止过拟合？',
+];
+
+// 答疑回复（基于知识库真实 AI 概念问题，用于流式模拟）
+export const tutorReplyMap: Record<string, string> = {
+  '符号主义、连接主义、行为主义有何区别？': `## AI 三大研究流派对比\n\n人工智能 70 年发展形成了**三大流派**，从不同哲学立场理解智能。\n\n### 一、符号主义（Symbolism）\n- **核心**：认知即计算，智能基于**符号操作**\n- **哲学**：理性主义\n- **代表**：专家系统、知识图谱、逻辑编程\n- **优势**：可解释性强\n- **劣势**：难处理模糊与感知问题\n\n### 二、连接主义（Connectionism）\n- **核心**：智能源于**大量神经元相互连接**\n- **哲学**：经验主义、仿生学\n- **代表**：感知机、MLP、CNN、Transformer\n- **优势**：擅长感知与模式识别\n- **劣势**：可解释性弱、数据饥渴\n\n### 三、行为主义（Actionism）\n- **核心**：智能涌现于**智能体与环境的交互**\n- **哲学**：进化主义、控制论\n- **代表**：强化学习、Brooks 机器人、具身智能\n- **优势**：适应动态环境\n- **劣势**：高阶认知建模困难\n\n### 当代融合趋势\n\n> 三大流派已不再对立：**神经符号 AI**（连接+符号）、**具身智能**（连接+行为）、**大模型 + 工具调用**（三派融合）正在成为主流。\n\n建议配合阅读资源《人工智能三大流派解析》。`,
+
+  'A* 算法为什么保证最优解？': `## A* 算法最优性证明\n\nA* 保证最优解的核心条件是启发函数 **h(n) 可采纳（admissible）**：\n\n\`h(n) ≤ h*(n)\`\n\n其中 \`h*(n)\` 是从 n 到目标的**真实最小代价**。\n\n### 直觉理解\n- 估计值**不高估**实际代价 → 算法不会因"乐观估计"而错过更优路径\n- 每次从 open 表取出 \`f(n) = g(n) + h(n)\` 最小的节点\n- 当目标节点出队时，其 g 值即为最优解\n\n### 一致性（更强条件）\n\n若对每条边 (n, n') 满足：\n\n\`h(n) ≤ c(n, n') + h(n')\`\n\n则 h **一致（consistent）**，A* 无需重复扩展节点。\n\n### 三种搜索策略对比\n\n| 算法 | 完备性 | 最优性 | 空间复杂度 |\n|------|--------|--------|------------|\n| BFS | ✓ | 仅等代价 | O(b^d) |\n| UCS | ✓ | ✓ | O(b^d) |\n| A*（可采纳） | ✓ | ✓ | O(b^d) |\n\n建议配合练习资源《A* 搜索算法专项练习》巩固。`,
+
+  'Transformer 的自注意力机制是什么？': `## Transformer 自注意力机制\n\n**自注意力（Self-Attention）**是 Transformer（《Attention is All You Need》, 2017）的核心创新，让序列中**任意两个位置直接交互**。\n\n### 核心公式\n\n\`Attention(Q, K, V) = softmax(QKᵀ / √d_k) · V\`\n\n- **Q（Query）**：当前位置作为"查询"\n- **K（Key）**：所有位置作为"键"\n- **V（Value）**：所有位置的内容\n- **√d_k 缩放**：防止内积过大导致 softmax 饱和\n\n### 工作流程\n1. 每个位置生成 Q, K, V（通过线性变换）\n2. 用 Q 与所有 K 做点积，得到注意力分数\n3. softmax 归一化为权重\n4. 用权重加权 V，得到输出\n\n### 多头注意力（Multi-Head）\n\n将 Q/K/V 投影到 **h 个子空间**分别做注意力，再拼接：\n\n\`MultiHead = Concat(head₁, ..., head_h) W^O\`\n\n意义：让模型从**多个视角**建模依赖关系。\n\n### 相比 RNN 的优势\n\n| 维度 | RNN | Transformer |\n|------|-----|-------------|\n| 依赖路径 | O(n) | O(1) |\n| 并行计算 | ✗ | ✓ |\n| 长程依赖 | 弱 | 强 |\n\n> 关键洞察：Transformer 用 **O(n²) 的全局注意力**换取 **O(1) 的依赖路径长度**，使长程依赖建模与并行计算同时成为可能。\n\n建议精读资源《Transformer 论文精读》。`,
+
+  '大语言模型的预训练范式是什么？': `## 大语言模型预训练范式\n\n现代大语言模型（LLM）采用**两阶段训练**：预训练 + 微调。\n\n## 一、预训练（Pre-training）\n\n在**海量无标注文本**上做自监督学习：\n\n### 1. 因果语言建模（CLM）\n\`P(w_t | w_1, ..., w_{t-1})\`\n\n代表：**GPT 系列**（Decoder-only）\n\n### 2. 掩码语言建模（MLM）\n预测被遮蔽的 token：\`P(w_masked | context)\`\n\n代表：**BERT**（Encoder-only）\n\n## 二、微调（Fine-tuning）\n\n### 1. 监督微调 SFT\n用指令数据 \`(instruction, response)\` 微调，让模型学会"听指令"。\n\n### 2. 人类反馈强化学习 RLHF\n- 训练奖励模型 RM（学习人类偏好）\n- 用 PPO 优化策略，最大化奖励\n\n### 3. 直接偏好优化 DPO\n直接在偏好对上优化策略，**省去显式 RM 与 PPO**，训练更稳定。\n\n## 三、涌现能力\n\n模型规模超过阈值后会出现**涌现能力**：\n- **In-Context Learning**：上下文学习\n- **CoT（Chain-of-Thought）**：思维链推理\n- **Tool Use**：工具调用\n\n## 四、代表模型\n\n| 厂商 | 模型 |\n|------|------|\n| OpenAI | GPT-4o |\n| Anthropic | Claude 3.5 |\n| Meta | LLaMA 3 |\n| 国产 | 通义千问、文心一言、讯飞星火、DeepSeek |\n\n建议配合资源《大语言模型预训练范式练习》巩固。`,
+
+  '什么是反向传播的链式法则？': `## 反向传播与链式法则\n\n**反向传播**本质上是用**链式法则**高效计算神经网络中各参数的梯度。\n\n### 一、链式法则回顾\n\n若 \`y = f(g(x))\`，则：\n\n\`dy/dx = (dy/dg) · (dg/dx)\`\n\n### 二、在神经网络中\n\n对于三层网络 \`输入 x → 隐藏 h → 输出 o → 损失 L\`：\n\n**前向传播**：\n- \`h = σ(W₁x + b₁)\`\n- \`o = σ(W₂h + b₂)\`\n- \`L = loss(o, y)\`\n\n**反向传播**：从 \`∂L/∂o\` 出发，逐层回推\n- \`∂L/∂W₂ = (∂L/∂o) · (∂o/∂h) · (∂h/∂W₂)\`\n- \`∂L/∂W₁ = (∂L/∂h) · (∂h/∂x) · (∂x/∂W₁)\`\n\n### 三、关键洞察\n\n> 反向传播的精髓不是"反向"，而是**复用前向计算的中间激活值**，避免重复求导，复杂度仅与前向相当。\n\n### 四、常见梯度异常\n\n| 现象 | 原因 | 解决 |\n|------|------|------|\n| 梯度消失 | Sigmoid 饱和 | ReLU |\n| 梯度爆炸 | 学习率过大 | 梯度裁剪 |\n| 神经元死亡 | ReLU 负区 | Leaky ReLU |\n\n建议观看资源《反向传播算法可视化讲解》。`,
+
+  '决策树如何防止过拟合？': `## 决策树防过拟合策略\n\n决策树极易过拟合（可把每个样本分到独立叶节点），常用三类方法：\n\n### 一、剪枝（Pruning）\n\n**预剪枝**：划分前评估\n- 限制 \`max_depth\`\n- 限制 \`min_samples_leaf\`\n- 限制 \`min_impurity_decrease\`\n\n**后剪枝**：先生长完整树，自底向上回剪\n- **CCP（代价复杂度剪枝）**：CART 默认\n\n### 二、限制树结构\n\`\`\`python\nfrom sklearn.tree import DecisionTreeClassifier\nclf = DecisionTreeClassifier(\n    max_depth=5,\n    min_samples_leaf=10,\n    min_impurity_decrease=0.01,\n    ccp_alpha=0.01,  # 后剪枝强度\n)\n\`\`\`\n\n### 三、集成方法\n\n| 方法 | 思路 | 代表 |\n|------|------|------|\n| Bagging | 多棵树投票降方差 | 随机森林 |\n| Boosting | 逐步拟合残差降偏差 | GBDT / XGBoost |\n\n### 四、偏差-方差视角\n\n- 单棵决策树：**低偏差 + 高方差**（易过拟合）\n- 随机森林：降方差\n- GBDT：降偏差\n\n> 你在「决策树与 SVM」节点掌握度仅 42%，建议优先复习剪枝部分，并完成代码案例《决策树 ID3/C4.5/CART 实战》。`,
+};
+
+// 学习报告数据
+export const reportData = {
+  overallMastery: 58,
+  healthScore: 78,
+  weeklyStats: {
+    completionRate: 72,
+    accuracyRate: 64,
+    studyMinutes: 750,
+    activeDays: 5,
+  },
+  masteryTrend: [
+    { topic: '数学基础',  values: [60, 65, 70, 78, 85, 88, 92] },
+    { topic: 'AI 概念',   values: [40, 50, 58, 65, 70, 75, 78] },
+    { topic: '搜索技术',  values: [30, 38, 45, 52, 58, 55, 58] },
+    { topic: '机器学习',  values: [20, 30, 40, 50, 60, 68, 72] },
+    { topic: '决策树',    values: [20, 28, 35, 40, 38, 42, 42] },
+  ],
+  trendLabels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+  suggestions: [
+    { id: 's1', title: '巩固决策树分裂准则', detail: '当前掌握度 42%，信息增益/增益率/基尼指数的辨析是薄弱点，建议重做专项练习与代码实战。', priority: 'high' },
+    { id: 's2', title: '补强搜索技术节点',   detail: '掌握度 58%，A* 的可采纳性与一致性证明需巩固，建议完成 10 道专项练习。', priority: 'high' },
+    { id: 's3', title: '保持学习节奏',       detail: '已连续学习 14 天，节奏稳定。本周完成率 72%，可适当增加练习强度。', priority: 'medium' },
+    { id: 's4', title: '预习深度学习章节',   detail: '基于你的兴趣方向（CV/NLP），深度学习是后续核心基础，建议提前预习反向传播。', priority: 'medium' },
+  ],
+  resourceUsage: {
+    doc: 22, mindmap: 8, quiz: 28, reading: 10, code: 11,
+  },
+};
+
+// 画像对话脚本（用于流式模拟）
+export const profileDialogue: { user: string; reply: string; delta: Partial<Profile> }[] = [
+  {
+    user: '我是计算机专业大三学生，想考研深造人工智能方向',
+    reply: '收到！你是计算机专业大三学生，目标是考研深造 AI 方向。这说明你有较好的编程基础，且学习目标明确。\n\n为了给你定制学习资源，我想再了解一下：你的数学基础（线性代数、概率论）感觉怎么样？之前接触过人工智能相关内容吗？',
+    delta: { background: 75, learningGoal: 90, interest: 85 },
+  },
+  {
+    user: '数学还行，线代学过但概率论比较薄弱，AI 只看过一些科普视频',
+    reply: '了解了。你的线性代数基础不错，但概率论需要补强；AI 还处于科普了解阶段。\n\n这很重要——我会在路径中为你安排概率论的复习节点，并从 AI 基础概念（三大流派、发展历史）讲起。\n\n再问一个：你平时学习更偏好哪种方式？看思维导图、读文档、还是动手写代码？',
+    delta: { knowledgeBase: 60, history: 40, cognitiveStyle: 80 },
+  },
+  {
+    user: '我比较喜欢看可视化的图解，然后自己动手写代码验证',
+    reply: '很好！你是典型的**视觉型 + 动手型**学习者。我会在资源推送中优先安排：\n\n- 思维导图与可视化结构图（知识 DAG）\n- 可运行的代码实操案例\n\n最后了解一下：你一般每次能学习多长时间？希望节奏快一点还是稳扎稳打？',
+    delta: { cognitiveStyle: 85, errorPattern: 48, learningPace: 70 },
+  },
+  {
+    user: '每次大概一小时，希望节奏稳一点，把基础打扎实',
+    reply: '完美！画像构建已基本完成。我已经为你生成了 8 维学习画像，并基于此规划了**覆盖知识库 8 大章节的 16 节点学习路径**。\n\n你的画像要点：\n- **知识基础** 62：数学尚可，概率论待补强\n- **认知风格** 85：视觉型 + 动手型\n- **学习目标** 90：考研深造 AI\n- **学习节奏** 70：稳扎稳打型\n\n现在可以前往「资源中心」查看为你定制的首批学习资源（含三大流派、A* 算法、Transformer 等 12 项），或在「学习路径」查看完整规划！',
+    delta: { learningPace: 72, interest: 88, knowledgeBase: 62, history: 58 },
+  },
+];
+
+export const profileSuggestions = [
+  '我是计算机专业大三学生，想考研深造人工智能方向',
+  '数学还行，线代学过但概率论比较薄弱',
+  '我比较喜欢看可视化的图解',
+  '每次大概一小时，希望节奏稳一点',
+];
