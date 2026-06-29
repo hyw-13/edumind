@@ -6,6 +6,7 @@ import {
   initialTutorMessages, tutorSuggestions, tutorReplyMap,
   type ChatMessage,
 } from '@/data/mockData';
+import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
 
 interface Msg extends ChatMessage {
@@ -58,6 +59,7 @@ export default function Tutor() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const pendingRef = useRef<string | null>(null);
+  const recordTutorQuestion = useStore((s) => s.recordTutorQuestion);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -70,6 +72,9 @@ export default function Tutor() {
     setInput('');
     setStreaming(true);
     setStreamText('');
+
+    // 记录答疑提问到全局 store（影响画像与推荐）
+    recordTutorQuestion(text, canEffectivelyAnswer(text));
 
     const reply = tutorReplyMap[text] ?? (canEffectivelyAnswer(text)
       ? `针对你的问题「${text}」，基于课程知识库检索，我整理了以下要点：\n\n## 解析\n\n该问题涉及核心概念的辨析与应用。建议从基本定义出发，理解其数学本质，再结合代码实例验证。\n\n### 关键点\n1. 概念定义与适用场景\n2. 数学推导与公式\n3. 代码实现示例\n\n> 提示：你可以结合资源中心的「讲解文档」与「代码案例」进一步巩固。`

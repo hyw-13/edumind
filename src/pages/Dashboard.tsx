@@ -3,19 +3,57 @@ import { Clock, Flame, Trophy, ArrowRight, TrendingUp, Sparkles } from 'lucide-r
 import ProgressRing from '@/components/ProgressRing';
 import Icon from '@/components/Icon';
 import {
-  learningOverview, recommendations, recentLearning,
-  resourceTypeMeta, type ResourceType,
+  learningOverview, recommendations,
+  resourceTypeMeta, resources, type ResourceType,
 } from '@/data/mockData';
 import { useStore } from '@/store/useStore';
+import { recommendResources } from '@/lib/personalRecommender';
+import {
+  computeCompletionRate, computeWeeklyMinutes, computeStreakDays,
+} from '@/lib/studyStats';
 import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
-  // 已学资源数动态反映到仪表盘
-  const learnedCount = useStore((s) => s.learnedResources.length);
+  // 动态数据
+  const learnedResources = useStore((s) => s.learnedResources);
+  const studyActivities = useStore((s) => s.studyActivities);
+  const tutorQuestions = useStore((s) => s.tutorQuestions);
+  const profile = useStore((s) => s.profile);
 
-  const masteredTopics = learningOverview.masteredTopics + learnedCount;
-  const totalProgress = Math.min(100, learningOverview.totalProgress + learnedCount * 4);
-  const weeklyHours = +(learningOverview.weeklyHours + learnedCount * 0.3).toFixed(1);
+  const learnedCount = learnedResources.length;
+  const totalResources = resources.length;
+
+  // 完成度：基于已学资源数 / 总资源数
+  const totalProgress = computeCompletionRate(learnedCount, totalResources);
+  // 已掌握知识点数 = 已学资源数（更真实）
+  const masteredTopics = learnedCount;
+  // 本周学习时长（分钟 → 小时）
+  const weeklyMinutes = computeWeeklyMinutes(studyActivities);
+  const weeklyHours = +(weeklyMinutes / 60).toFixed(1);
+  // 连续学习天数
+  const streakDays = computeStreakDays(studyActivities);
+
+  // 个性化推荐：基于画像 + 学习历史 + 答疑历史
+  const personalRecs = recommendResources(profile, learnedResources, tutorQuestions, 3);
+  // 如果没有个性化推荐（如已学完所有资源），回退到静态推荐
+  const displayRecs = personalRecs.length > 0 ? personalRecs : recommendations;
+
+  // 最近学习：基于已学资源 + 默认数据混合
+  const recentLearned = learnedResources.slice(0, 4).map((r, idx) => ({
+    id: `recent-${r.resourceId}`,
+    type: r.type,
+    title: r.title,
+    chapter: r.chapter,
+    progress: 100,
+    updatedAt: idx === 0 ? '刚刚' : '今天',
+  }));
+  // 不足 4 个时补充默认数据
+  const displayRecent = recentLearned.length >= 4
+    ? recentLearned
+    : [
+        ...recentLearned,
+        ...learningOverviewFallback.slice(0, 4 - recentLearned.length),
+      ];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 md:px-10">
@@ -29,11 +67,11 @@ export default function Dashboard() {
               <Sparkles size={14} /> 总体学习进度
             </div>
             <div className="mt-4 flex items-center gap-6">
-              <ProgressRing value={totalProgress} size={128} label="完成度" sublabel={`${masteredTopics}/${learningOverview.totalTopics} 知识点`} />
+              <ProgressRing value={totalProgress} size={128} label="完成度" sublabel={`${masteredTopics}/${totalResources} 资源`} />
               <div className="space-y-3">
                 <Stat icon={<Clock size={16} />} label="本周学习" value={`${weeklyHours}h`} goal={`/ ${learningOverview.weeklyGoal}h`} />
-                <Stat icon={<Flame size={16} />} label="连续学习" value={`${learningOverview.streakDays} 天`} accent />
-                <Stat icon={<Trophy size={16} />} label="已掌握" value={`${masteredTopics} 个`} goal={`/ ${learningOverview.totalTopics}`} />
+                <Stat icon={<Flame size={16} />} label="连续学习" value={`${streakDays} 天`} accent />
+                <Stat icon={<Trophy size={16} />} label="已掌握" value={`${masteredTopics} 个`} goal={`/ ${totalResources}`} />
               </div>
             </div>
           </div>
@@ -44,14 +82,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-semibold text-ink">今日推荐</h2>
-              <p className="text-sm text-ink-muted">基于你的画像智能推送</p>
+              <p className="text-sm text-ink-muted">基于你的画像与答疑历史智能推送</p>
             </div>
             <Link to="/resources" className="flex items-center gap-1 text-sm font-medium text-teal hover:gap-2 transition-all">
               全部资源 <ArrowRight size={15} />
             </Link>
           </div>
           <div className="mt-5 space-y-3">
-            {recommendations.map((r, idx) => {
+            {displayRecs.map((r, idx) => {
               const meta = resourceTypeMeta[r.type as ResourceType];
               return (
                 <Link
@@ -86,7 +124,7 @@ export default function Dashboard() {
           <span className="text-xs text-ink-muted">继续上次的学习</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {recentLearning.map((item, idx) => {
+          {displayRecent.map((item, idx) => {
             const meta = resourceTypeMeta[item.type as ResourceType];
             return (
               <Link
@@ -126,6 +164,14 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// 静态回退数据（最近学习不足时补充）
+const learningOverviewFallback = [
+  { id: 'fb1', type: 'doc' as const, title: '人工智能三大流派解析', chapter: '基础概念 · 三大流派', progress: 0, updatedAt: '未开始' },
+  { id: 'fb2', type: 'mindmap' as const, title: 'AI 70 年发展史时间线', chapter: '发展历史 · 全景', progress: 0, updatedAt: '未开始' },
+  { id: 'fb3', type: 'quiz' as const, title: 'A* 搜索算法专项练习', chapter: '核心技术 · 搜索技术', progress: 0, updatedAt: '未开始' },
+  { id: 'fb4', type: 'code' as const, title: '决策树 ID3/C4.5/CART 实战', chapter: '核心技术 · 机器学习', progress: 0, updatedAt: '未开始' },
+];
 
 function Stat({ icon, label, value, goal, accent }: { icon: React.ReactNode; label: string; value: string; goal?: string; accent?: boolean }) {
   return (

@@ -417,7 +417,7 @@ function arraysEqual(a: number[], b: number[]): boolean {
 }
 
 function QuizPlayer({ quiz }: { quiz: Quiz }) {
-  const updateFromQuiz = useStore((s) => s.updateFromQuiz);
+  const recordQuizResult = useStore((s) => s.recordQuizResult);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
   const [submittedMap, setSubmittedMap] = useState<Record<string, boolean>>({});
@@ -450,9 +450,9 @@ function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const handleNext = () => {
     if (isLast) {
       setFinished(true);
-      // 随学随新：答题完成后更新画像
+      // 随学随新：答题完成后记录结果（写入 quizResults + 学习活动 + 更新画像）
       const finalScore = quiz.questions.filter((q) => submittedMap[q.id] && arraysEqual(answers[q.id] || [], q.answer)).length;
-      updateFromQuiz(finalScore, quiz.questions.length, quiz.title);
+      recordQuizResult(finalScore, quiz.questions.length, quiz.title);
     } else {
       setCurrentIdx((i) => i + 1);
     }

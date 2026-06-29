@@ -25,10 +25,44 @@ export interface LearnedRecord {
   learnedAt: string;      // 标记时间
 }
 
+// 学习活动记录（用于活跃天数、本周时长、趋势图等聚合统计）
+export interface StudyActivity {
+  id: string;
+  type: 'resource' | 'quiz' | 'tutor' | 'path';
+  typeLabel: string;      // 资源学习 / 答题练习 / 智能答疑 / 路径学习
+  title: string;          // 活动标题
+  timestamp: number;      // 毫秒时间戳
+  date: string;           // YYYY-MM-DD，便于按天聚合
+  durationMin: number;    // 活动时长（分钟）
+}
+
+// 答题结果记录（用于正确率、掌握度趋势）
+export interface QuizResult {
+  id: string;
+  score: number;
+  total: number;
+  chapter: string;
+  rate: number;           // 正确率 0-1
+  timestamp: number;
+  date: string;
+}
+
+// 答疑提问记录（用于推荐个性化）
+export interface TutorQuestion {
+  id: string;
+  question: string;
+  effective: boolean;     // 是否为有效 AI 问题
+  timestamp: number;
+  date: string;
+}
+
 interface AppState {
   profile: Profile;
   updateHistory: ProfileUpdateRecord[];
   learnedResources: LearnedRecord[];   // 已标记学习的资源列表
+  studyActivities: StudyActivity[];    // 学习活动流水
+  quizResults: QuizResult[];           // 答题结果
+  tutorQuestions: TutorQuestion[];     // 答疑提问
   setProfile: (p: Partial<Profile>) => void;
   // 随学随新：基于学习事件更新画像
   applyProfileDelta: (
@@ -43,9 +77,13 @@ interface AppState {
   updateFromPathProgress: (completedCount: number, totalCount: number) => void;
   // 学习资源访问
   updateFromResourceAccess: (resourceType: string, duration: number) => void;
-  // 标记资源已学：更新画像 + 记录到已学列表
+  // 标记资源已学：更新画像 + 记录到已学列表 + 写入学习活动
   markResourceLearned: (resource: { id: string; title: string; type: ResourceType; chapter: string }) => boolean;
   isResourceLearned: (resourceId: string) => boolean;
+  // 记录答题结果（含画像更新与活动流水）
+  recordQuizResult: (score: number, total: number, chapter: string) => void;
+  // 记录答疑提问（用于推荐与画像）
+  recordTutorQuestion: (question: string, effective: boolean) => void;
   resetProfile: () => void;
 }
 
@@ -54,11 +92,16 @@ const clamp = (v: number) => Math.max(5, Math.min(95, v));
 
 // 当前时间字符串
 const now = () => new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+// 当前日期字符串 YYYY-MM-DD
+const today = () => new Date().toISOString().slice(0, 10);
 
 export const useStore = create<AppState>((set, get) => ({
   profile: initialProfile,
   updateHistory: [],
   learnedResources: [],
+  studyActivities: [],
+  quizResults: [],
+  tutorQuestions: [],
 
   setProfile: (delta) =>
     set((state) => ({
@@ -168,6 +211,19 @@ export const useStore = create<AppState>((set, get) => ({
         },
         ...s.learnedResources,
       ],
+      // 同步写入学习活动流水
+      studyActivities: [
+        {
+          id: `act-${Date.now()}`,
+          type: 'resource',
+          typeLabel: '资源学习',
+          title: resource.title,
+          timestamp: Date.now(),
+          date: today(),
+          durationMin: 25, // 假设单资源平均学习 25 分钟
+        },
+        ...s.studyActivities,
+      ],
     }));
     // 根据资源类型更新画像维度
     const delta: Partial<Profile> = { knowledgeBase: state.profile.knowledgeBase + 4 };
@@ -197,5 +253,84 @@ export const useStore = create<AppState>((set, get) => ({
   isResourceLearned: (resourceId) =>
     get().learnedResources.some((r) => r.resourceId === resourceId),
 
-  resetProfile: () => set({ profile: initialProfile, updateHistory: [], learnedResources: [] }),
+  // 记录答题结果：写入 quizResults + 学习活动 + 触发画像更新
+  recordQuizResult: (score, total, chapter) => {
+    const rate = total > 0 ? score / total : 0;
+    const ts = Date.now();
+    set((s) => ({
+      quizResults: [
+        {
+          id: `quiz-${ts}`,
+          score,
+          total,
+          chapter,
+          rate,
+          timestamp: ts,
+          date: today(),
+        },
+        ...s.quizResults,
+      ],
+      studyActivities: [
+        {
+          id: `act-${ts}`,
+          type: 'quiz',
+          typeLabel: '答题练习',
+          title: `《${chapter}》答题 ${score}/${total}`,
+          timestamp: ts,
+          date: today(),
+          durationMin: 15, // 答题平均 15 分钟
+        },
+        ...s.studyActivities,
+      ],
+    }));
+    // 触发画像更新（复用既有逻辑）
+    get().updateFromQuiz(score, total, chapter);
+  },
+
+  // 记录答疑提问：写入 tutorQuestions + 学习活动 + 更新画像
+  recordTutorQuestion: (question, effective) => {
+    const ts = Date.now();
+    set((s) => ({
+      tutorQuestions: [
+        {
+          id: `tutor-${ts}`,
+          question,
+          effective,
+          timestamp: ts,
+          date: today(),
+        },
+        ...s.tutorQuestions,
+      ],
+      studyActivities: [
+        {
+          id: `act-${ts}`,
+          type: 'tutor',
+          typeLabel: '智能答疑',
+          title: question.slice(0, 30),
+          timestamp: ts,
+          date: today(),
+          durationMin: 8, // 答疑平均 8 分钟
+        },
+        ...s.studyActivities,
+      ],
+    }));
+    // 有效提问 → 兴趣 +1、学习节奏 +1
+    if (effective) {
+      get().applyProfileDelta(
+        { interest: get().profile.interest + 1, learningPace: get().profile.learningPace + 1 },
+        'dialogue',
+        '智能答疑',
+        `答疑提问：${question.slice(0, 20)}`
+      );
+    }
+  },
+
+  resetProfile: () => set({
+    profile: initialProfile,
+    updateHistory: [],
+    learnedResources: [],
+    studyActivities: [],
+    quizResults: [],
+    tutorQuestions: [],
+  }),
 }));

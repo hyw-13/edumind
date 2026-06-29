@@ -3,11 +3,17 @@ import ProgressRing from '@/components/ProgressRing';
 import LineChart from '@/components/LineChart';
 import RadarChart from '@/components/RadarChart';
 import Icon from '@/components/Icon';
-import { reportData, resourceTypeMeta, type ResourceType } from '@/data/mockData';
+import { reportData, resourceTypeMeta, resources, type ResourceType } from '@/data/mockData';
 import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
+import {
+  computeCompletionRate, computeWeeklyMinutes, computeActiveDays,
+  computeAccuracyRate, computeOverallMastery, computeHealthScore,
+  computeMasteryTrend, computeTopicTrends, computeResourceUsage,
+  computeRadarData, generateSuggestions,
+} from '@/lib/studyStats';
 
-const trendColors = ['#0f766e', '#ea580c', '#e11d48', '#a8a29e'];
+const trendColors = ['#0f766e', '#ea580c', '#e11d48', '#a8a29e', '#0d9488'];
 
 const priorityStyle = {
   high: { label: '高优先', cls: 'bg-rose-pale text-rose', icon: AlertTriangle },
@@ -16,47 +22,63 @@ const priorityStyle = {
 } as const;
 
 export default function Report() {
-  // 已学资源动态反映到学习报告
+  // 动态数据源
   const learnedResources = useStore((s) => s.learnedResources);
+  const studyActivities = useStore((s) => s.studyActivities);
+  const quizResults = useStore((s) => s.quizResults);
+  const profile = useStore((s) => s.profile);
+
   const learnedCount = learnedResources.length;
+  const totalResources = resources.length;
 
-  // 基础值 + 已学资源带来的增量
-  const overallMastery = Math.min(100, reportData.overallMastery + learnedCount * 4);
-  // 学习健康度：前 5 个资源每个 +2，超过 5 个的部分每个 -3（短期过度学习导致健康度下降）
-  const healthScore = Math.max(
-    40,
-    Math.min(
-      99,
-      reportData.healthScore + Math.min(5, learnedCount) * 2 - Math.max(0, learnedCount - 5) * 3
-    )
+  // ========== 动态计算所有指标 ==========
+  const completionRate = computeCompletionRate(learnedCount, totalResources);
+  const accuracyRate = computeAccuracyRate(quizResults);
+  const weeklyMinutes = computeWeeklyMinutes(studyActivities);
+  const activeDays = computeActiveDays(studyActivities);
+  const overallMastery = computeOverallMastery(learnedCount, totalResources, accuracyRate, profile.knowledgeBase);
+  const healthScore = computeHealthScore(studyActivities, learnedCount);
+
+  // 掌握度变化趋势（基于真实学习活动）
+  const masteryTrendData = computeMasteryTrend(studyActivities, quizResults, 30);
+  // 各知识点掌握度趋势（多曲线）
+  const topicTrends = computeTopicTrends(studyActivities, quizResults, [
+    { topic: '资源学习', keywords: ['决策树', 'Transformer', 'A*', '神经网络', '机器学习'] },
+    { topic: '答题练习', keywords: ['搜索', '机器学习', '神经网络', '历史'] },
+    { topic: '智能答疑', keywords: ['Transformer', '注意力', '深度学习', '强化学习'] },
+    { topic: '综合掌握', keywords: [] }, // 空关键词 = 所有活动
+  ]);
+
+  // 雷达数据
+  const radarData = computeRadarData(completionRate, accuracyRate, activeDays, studyActivities, profile);
+
+  // 资源使用统计
+  const resourceUsage = computeResourceUsage(learnedResources, reportData.resourceUsage as Record<ResourceType, number>);
+
+  // 个性化建议
+  const suggestions = generateSuggestions(
+    profile,
+    learnedResources,
+    quizResults,
+    [
+      {
+        title: '巩固决策树分裂准则',
+        detail: '当前掌握度 42%，信息增益/增益率/基尼指数的辨析是薄弱点，建议重做专项练习与代码实战。',
+        priority: 'high' as const,
+      },
+      {
+        title: '补强搜索技术节点',
+        detail: '掌握度 58%，A* 的可采纳性与一致性证明需巩固，建议完成 10 道专项练习。',
+        priority: 'high' as const,
+      },
+    ]
   );
-  const weeklyStats = {
-    ...reportData.weeklyStats,
-    completionRate: Math.min(99, reportData.weeklyStats.completionRate + learnedCount * 4),
-    studyMinutes: reportData.weeklyStats.studyMinutes + learnedCount * 20,
-  };
-  // 各类型资源使用次数 + 已学资源中对应类型的计数
-  const usageDelta: Record<ResourceType, number> = { doc: 0, mindmap: 0, quiz: 0, code: 0, reading: 0 };
-  learnedResources.forEach((r) => {
-    if (r.type in usageDelta) usageDelta[r.type as ResourceType] += 1;
-  });
-  const resourceUsage = { ...reportData.resourceUsage } as Record<ResourceType, number>;
-  (Object.keys(usageDelta) as ResourceType[]).forEach((k) => {
-    resourceUsage[k] = (resourceUsage[k] || 0) + usageDelta[k];
-  });
 
-  const { masteryTrend, trendLabels, suggestions } = reportData;
+  const maxUsage = Math.max(...Object.values(resourceUsage), 1);
 
-  const radarData = [
-    { label: '完成率', value: weeklyStats.completionRate },
-    { label: '正确率', value: weeklyStats.accuracyRate },
-    { label: '活跃度', value: weeklyStats.activeDays * 14 },
-    { label: '专注度', value: 80 },
-    { label: '进步度', value: 72 },
-    { label: '坚持度', value: 90 },
-  ];
-
-  const maxUsage = Math.max(...Object.values(resourceUsage));
+  // 趋势对比：较上周变化
+  const masteryDelta = learnedCount > 0 ? `+${Math.min(learnedCount * 4, 20)}%` : '+0%';
+  const weeklyHours = +(weeklyMinutes / 60).toFixed(1);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 md:px-10">
@@ -66,9 +88,9 @@ export default function Report() {
           <div className="absolute right-0 top-0 h-28 w-28 -translate-y-6 translate-x-6 rounded-full bg-teal/10 blur-2xl" />
           <div className="relative flex flex-col items-center">
             <div className="text-xs font-medium text-teal">综合掌握度</div>
-            <ProgressRing value={overallMastery} size={136} label="掌握度" sublabel="全部章节" />
+            <ProgressRing value={overallMastery} size={136} label="掌握度" sublabel={`${learnedCount}/${totalResources} 资源`} />
             <div className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
-              <TrendingUp size={13} /> 较上周 +8%
+              <TrendingUp size={13} /> 较上周 {masteryDelta}
             </div>
           </div>
         </div>
@@ -90,16 +112,18 @@ export default function Report() {
             <p className={cn('mt-3 text-xs', learnedCount > 5 ? 'text-rose font-medium' : 'text-ink-muted')}>
               {learnedCount > 5
                 ? `短期学习 ${learnedCount} 项资源强度过高，建议适当休息、避免疲劳学习。`
+                : learnedCount === 0
+                ? '开始学习以建立健康的学习节奏。'
                 : '学习节奏稳定，建议加强薄弱知识点的针对性练习。'}
             </p>
           </div>
         </div>
 
         <div className="card grid grid-cols-2 gap-4 p-6 animate-fade-up" style={{ animationDelay: '160ms' }}>
-          <MiniStat icon={<CheckCircle2 size={15} />} label="完成率" value={`${weeklyStats.completionRate}%`} trend="+6%" up />
-          <MiniStat icon={<Target size={15} />} label="正确率" value={`${weeklyStats.accuracyRate}%`} trend="-3%" up={false} />
-          <MiniStat icon={<Clock size={15} />} label="本周时长" value={`${Math.floor(weeklyStats.studyMinutes / 60)}h`} trend="+2.5h" up />
-          <MiniStat icon={<Zap size={15} />} label="活跃天数" value={`${weeklyStats.activeDays}天`} trend="稳定" up />
+          <MiniStat icon={<CheckCircle2 size={15} />} label="完成率" value={`${completionRate}%`} trend={`${learnedCount} 项`} up />
+          <MiniStat icon={<Target size={15} />} label="正确率" value={quizResults.length > 0 ? `${accuracyRate}%` : '—'} trend={quizResults.length > 0 ? `${quizResults.length} 次` : '未答题'} up={accuracyRate >= 60} />
+          <MiniStat icon={<Clock size={15} />} label="本周时长" value={`${weeklyHours}h`} trend={`${weeklyMinutes} 分钟`} up={weeklyHours > 0} />
+          <MiniStat icon={<Zap size={15} />} label="活跃天数" value={`${activeDays}天`} trend={activeDays >= 3 ? '稳定' : '需加强'} up={activeDays >= 3} />
         </div>
       </section>
 
@@ -109,20 +133,25 @@ export default function Report() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="font-display text-base font-semibold text-ink">掌握度变化趋势</h2>
-              <p className="text-xs text-ink-muted">近 7 天各知识点掌握度曲线</p>
+              <p className="text-xs text-ink-muted">近 7 天学习行为驱动的掌握度曲线</p>
             </div>
             <span className="rounded-full bg-teal-pale/40 px-3 py-1 text-[11px] font-medium text-teal-dark">本周</span>
           </div>
           <LineChart
-            labels={trendLabels}
-            series={masteryTrend.map((t, i) => ({ topic: t.topic, values: t.values, color: trendColors[i] }))}
+            labels={masteryTrendData.labels}
+            series={topicTrends.map((t, i) => ({ topic: t.topic, values: t.values, color: trendColors[i] }))}
           />
+          {studyActivities.length === 0 && (
+            <div className="mt-3 rounded-lg bg-paper-soft/60 py-2 text-center text-xs text-ink-muted">
+              暂无学习活动数据，开始学习后曲线将动态更新
+            </div>
+          )}
         </div>
 
         <div className="card p-6">
           <div className="mb-2">
             <h2 className="font-display text-base font-semibold text-ink">多维学习分析</h2>
-            <p className="text-xs text-ink-muted">本周学习行为雷达</p>
+            <p className="text-xs text-ink-muted">基于真实学习行为的雷达图</p>
           </div>
           <div className="flex justify-center">
             <RadarChart data={radarData} size={300} />
@@ -135,7 +164,7 @@ export default function Report() {
         <div className="mb-3 flex items-center gap-2">
           <Sparkles size={16} className="text-teal" />
           <h2 className="font-display text-base font-semibold text-ink">个性化学习建议</h2>
-          <span className="text-xs text-ink-muted">· 由评估智能体生成</span>
+          <span className="text-xs text-ink-muted">· 基于画像与学习历史动态生成</span>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {suggestions.map((s, idx) => {
@@ -160,7 +189,7 @@ export default function Report() {
       <section className="mt-5">
         <div className="mb-3">
           <h2 className="font-display text-base font-semibold text-ink">资源使用统计</h2>
-          <p className="text-xs text-ink-muted">各类资源本周使用次数</p>
+          <p className="text-xs text-ink-muted">各类资源本周学习次数（含已学记录）</p>
         </div>
         <div className="card p-6">
           <div className="space-y-3">
@@ -191,7 +220,9 @@ export default function Report() {
           </div>
           <div className="mt-5 flex items-center justify-center gap-2 rounded-lg bg-paper-soft/60 py-3 text-xs text-ink-muted">
             <TrendingUp size={14} className="text-teal" />
-            题库使用最频繁，建议保持练习节奏；思维导图使用偏少，可结合复习增加
+            {learnedCount > 0
+              ? `已学习 ${learnedCount} 项资源，${quizResults.length > 0 ? `答题 ${quizResults.length} 次平均正确率 ${accuracyRate}%` : '建议开始答题练习巩固知识'}`
+              : '开始标记学习资源，统计将动态更新'}
           </div>
         </div>
       </section>
