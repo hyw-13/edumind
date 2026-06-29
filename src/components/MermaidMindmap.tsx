@@ -41,7 +41,7 @@ const palette = [
 ];
 
 // 估算文本宽度（中文 ~14px，ASCII ~7.5px，13px 字号）
-function estimateWidth(text: string, minWidth = 72, maxWidth = 168): number {
+function estimateWidth(text: string, minWidth = 72, maxWidth = 260): number {
   let w = 0;
   for (const ch of text) {
     w += /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? 14 : 7.5;
@@ -69,27 +69,95 @@ function sanitize(text: string): string {
     .trim();
 }
 
-// 解析 Markdown 列表树
+// 解析 Markdown 文档树：# 作为 root，## / ### 作为分支，- 列表项作为叶子
 function parseMarkdownTree(content: string): MindmapNode | null {
   const lines = content.split('\n');
-  const bulletLines: { indent: number; text: string }[] = [];
-  for (const line of lines) {
-    const m = line.match(/^(\s*)[-+*]\s+(.+)$/);
-    if (m) bulletLines.push({ indent: m[1].length, text: m[2].trim() });
-  }
-  if (bulletLines.length === 0) return null;
 
-  const root: MindmapNode = { text: sanitize(bulletLines[0].text) || '主题', children: [] };
-  const stack: { node: MindmapNode; indent: number }[] = [
-    { node: root, indent: bulletLines[0].indent },
-  ];
-  for (let i = 1; i < bulletLines.length; i++) {
-    const { indent, text } = bulletLines[i];
-    const node: MindmapNode = { text: sanitize(text) || '节点', children: [] };
-    while (stack.length > 1 && stack[stack.length - 1].indent >= indent) stack.pop();
-    stack[stack.length - 1].node.children.push(node);
-    stack.push({ node, indent });
+  // 1. 找到首个 # 一级标题作为 root
+  let rootText = '主题';
+  let rootIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^#\s+(.+)$/);
+    if (m) {
+      rootText = sanitize(m[1].trim()) || '主题';
+      rootIdx = i;
+      break;
+    }
   }
+  if (rootIdx === -1) {
+    // 回退：尝试用首个列表项作为 root
+    const firstBulletIdx = lines.findIndex((l) => /^(\s*)[-+*]\s+/.test(l));
+    if (firstBulletIdx === -1) return null;
+    rootText = '主题';
+    rootIdx = firstBulletIdx - 1;
+  }
+
+  const root: MindmapNode = { text: rootText, children: [] };
+  // 当前分支上下文
+  let currentBranch: MindmapNode | null = null;   // ## 对应节点
+  let currentSubBranch: MindmapNode | null = null; // ### 对应节点
+  // 列表项缩进栈（用于处理 - 的嵌套缩进）
+  let listStack: { node: MindmapNode; indent: number }[] = [];
+
+  for (let i = rootIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 匹配各级标题与列表项
+    const h2 = line.match(/^##\s+(.+)$/);
+    const h3 = line.match(/^###\s+(.+)$/);
+    const h4 = line.match(/^####\s+(.+)$/);
+    const bullet = line.match(/^(\s*)[-+*]\s+(.+)$/);
+
+    if (h2) {
+      currentBranch = { text: sanitize(h2[1].trim()) || '分支', children: [] };
+      root.children.push(currentBranch);
+      currentSubBranch = null;
+      listStack = [];
+    } else if (h3) {
+      if (!currentBranch) {
+        // ### 没有父 ## ，创建一个默认分支
+        currentBranch = { text: '分支', children: [] };
+        root.children.push(currentBranch);
+      }
+      currentSubBranch = { text: sanitize(h3[1].trim()) || '子分支', children: [] };
+      currentBranch.children.push(currentSubBranch);
+      listStack = [];
+    } else if (h4) {
+      // #### 作为更深层节点，挂在当前 subBranch 下
+      const parent = currentSubBranch || currentBranch;
+      if (parent) {
+        const node: MindmapNode = { text: sanitize(h4[1].trim()) || '小节', children: [] };
+        parent.children.push(node);
+        listStack = [{ node, indent: 0 }];
+      }
+    } else if (bullet) {
+      const indent = bullet[1].length;
+      const text = sanitize(bullet[2].trim()) || '节点';
+      const node: MindmapNode = { text, children: [] };
+
+      // 确定挂载父节点
+      const parent = currentSubBranch || currentBranch;
+      if (!parent) {
+        // 没有标题父节点，直接挂到 root
+        root.children.push(node);
+        listStack = [{ node, indent }];
+        continue;
+      }
+
+      // 根据缩进出栈
+      while (listStack.length > 0 && listStack[listStack.length - 1].indent >= indent) {
+        listStack.pop();
+      }
+      if (listStack.length === 0) {
+        parent.children.push(node);
+      } else {
+        listStack[listStack.length - 1].node.children.push(node);
+      }
+      listStack.push({ node, indent });
+    }
+    // 其他行（表格、引用块、段落、代码块）忽略
+  }
+
   return root;
 }
 

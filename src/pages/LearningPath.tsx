@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Circle, Clock, AlertCircle, Target, ArrowRight, Sparkles, RotateCcw, Check } from 'lucide-react';
 import { pathNodes, pathEdges, type PathNode } from '@/data/mockData';
+import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
 
 // 薄弱节点 → 对应学习资源映射
@@ -9,6 +10,57 @@ const weakNodeResources: Record<string, string> = {
   n10: 'res5', // 决策树与 SVM → 决策树 ID3/C4.5/CART 实战
   n7: 'res3',  // 搜索技术 → A* 搜索算法专项练习
 };
+
+// 学习路径节点 → 关联学习资源映射（用于动态计算掌握度）
+const nodeRelatedResources: Record<string, string[]> = {
+  n1:  [],                                                    // 数学基础（无直接资源，保留基础值）
+  n2:  [],                                                    // Python 编程（无直接资源，保留基础值）
+  n3:  ['res1'],                                              // AI 基础概念 → 三大流派解析
+  n4:  ['res2', 'res12', 'res15'],                            // 发展历史 → 时间线 + 达特茅斯 + 历史练习
+  n5:  ['res30'],                                             // 科学背景 → 神经/认知科学阅读
+  n6:  ['res16'],                                             // 知识表示 → 知识表示方法综述
+  n7:  ['res3', 'res17'],                                     // 搜索技术 → A*练习 + 搜索算法决策图
+  n8:  ['res7'],                                              // 知识图谱 → 构建流程图
+  n9:  ['res13', 'res19', 'res22'],                           // 机器学习 → ML基础 + K-Means + ML算法分类
+  n10: ['res5'],                                              // 决策树与 SVM → 决策树实战
+  n11: ['res14', 'res29'],                                    // 深度学习基础 → 神经网络练习 + NumPy 实现
+  n12: ['res21'],                                             // 计算机视觉 → CNN 原理
+  n13: ['res6', 'res24', 'res25'],                            // NLP 与 Transformer → 论文精读 + 自注意力实现 + BERT vs GPT
+  n14: ['res8'],                                              // 大语言模型 → 预训练范式练习
+  n15: ['res9'],                                              // 智能体 → 多智能体与 LangGraph
+  n16: ['res11', 'res27'],                                    // 应用与伦理 → 伦理对齐 + 应用全景
+};
+
+// 基于已学资源动态计算节点掌握度与状态
+function computeDynamicNodes(
+  learnedResourceIds: Set<string>,
+): PathNode[] {
+  return pathNodes.map((node) => {
+    const related = nodeRelatedResources[node.id] || [];
+    if (related.length === 0) {
+      // 无关联资源，保留原始掌握度（基础学科）
+      return { ...node };
+    }
+    const learnedCount = related.filter((rid) => learnedResourceIds.has(rid)).length;
+    const learnedRatio = learnedCount / related.length; // 0 ~ 1
+    // 动态掌握度 = 基础值 * 0.5 + 学习完成比例 * 50，上限 100
+    const baseMastery = node.mastery;
+    const dynamicMastery = Math.min(100, Math.round(baseMastery * 0.5 + learnedRatio * 50));
+
+    // 动态状态
+    let status: PathNode['status'];
+    if (dynamicMastery >= 70) {
+      status = 'done';
+    } else if (dynamicMastery >= 35) {
+      status = 'current';
+    } else if (learnedCount > 0) {
+      status = 'review';
+    } else {
+      status = node.status === 'done' ? 'current' : node.status;
+    }
+    return { ...node, mastery: dynamicMastery, status };
+  });
+}
 
 // 分层布局坐标（7 阶段从左到右，覆盖知识库 8 大章节 16 节点）
 const positions: Record<string, { x: number; y: number }> = {
@@ -45,7 +97,20 @@ const statusMeta = {
 } as const;
 
 export default function LearningPath() {
-  const [selected, setSelected] = useState<PathNode | null>(pathNodes.find((n) => n.status === 'review') ?? null);
+  // 从 store 读取已学资源，动态计算节点状态
+  const learnedResources = useStore((s) => s.learnedResources);
+  const learnedResourceIds = useMemo(
+    () => new Set(learnedResources.map((r) => r.resourceId)),
+    [learnedResources],
+  );
+  const dynamicNodes = useMemo(
+    () => computeDynamicNodes(learnedResourceIds),
+    [learnedResourceIds],
+  );
+
+  const [selected, setSelected] = useState<PathNode | null>(
+    dynamicNodes.find((n) => n.status === 'review') ?? dynamicNodes.find((n) => n.status === 'current') ?? null,
+  );
   const [focusId, setFocusId] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,7 +120,7 @@ export default function LearningPath() {
   useEffect(() => {
     const focus = searchParams.get('focus');
     if (focus) {
-      const target = pathNodes.find((n) => n.id === focus);
+      const target = dynamicNodes.find((n) => n.id === focus);
       if (target) {
         setSelected(target);
         setFocusId(focus);
@@ -65,45 +130,63 @@ export default function LearningPath() {
       searchParams.delete('focus');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, dynamicNodes]);
+
+  // 已学资源变化时，同步更新 selected 到最新节点数据（保持 id 不变，刷新 mastery/status）
+  useEffect(() => {
+    if (selected) {
+      const updated = dynamicNodes.find((n) => n.id === selected.id);
+      if (updated && (updated.mastery !== selected.mastery || updated.status !== selected.status)) {
+        setSelected(updated);
+      }
+    }
+  }, [dynamicNodes, selected]);
+
+  // 检测薄弱节点（动态计算）
+  const weakNodes = dynamicNodes.filter((n) => n.status === 'review' || (n.status === 'current' && n.mastery < 50));
+  const hasWeakNodes = weakNodes.length > 0;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 md:px-10">
       {/* Adjustment banner */}
       <div className={cn(
         'mb-5 flex items-start gap-3 rounded-xl border p-4 animate-fade-up transition-all duration-300',
-        accepted
+        accepted || !hasWeakNodes
           ? 'border-teal/30 bg-teal-pale/30'
           : 'border-amber/30 bg-amber-pale/30'
       )}>
         <div className={cn(
           'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-          accepted ? 'bg-teal/15' : 'bg-amber/15'
+          accepted || !hasWeakNodes ? 'bg-teal/15' : 'bg-amber/15'
         )}>
-          {accepted
+          {accepted || !hasWeakNodes
             ? <CheckCircle2 size={18} className="text-teal" />
             : <AlertCircle size={18} className="text-amber" />
           }
         </div>
         <div className="flex-1">
           <div className="text-sm font-medium text-ink">
-            {accepted ? '已接受路径调整 · 复习节点已锁定' : '路径规划智能体检测到 2 个薄弱环节'}
+            {!hasWeakNodes
+              ? '当前无薄弱环节 · 学习路径健康'
+              : accepted
+                ? '已接受路径调整 · 复习节点已锁定'
+                : `路径规划智能体检测到 ${weakNodes.length} 个薄弱环节`}
           </div>
           <p className="mt-0.5 text-xs text-ink-muted">
-            {accepted
-              ? '已将「决策树与 SVM」与「搜索技术」标记为优先复习节点。掌握度达到 70% 后可继续推进「深度学习基础」。'
-              : '「决策树与 SVM」掌握度 42%、「搜索技术」58%，已在路径中插入复习节点。建议优先重做专项练习，掌握度达到 70% 后再推进「深度学习基础」。'
+            {!hasWeakNodes
+              ? '各节点掌握度良好，建议按路径顺序继续推进后续学习。'
+              : accepted
+                ? '已将薄弱节点标记为优先复习。掌握度达到 70% 后可继续推进后续节点。'
+                : weakNodes.map((n) => `「${n.label}」${n.mastery}%`).join('、') + '，建议优先复习对应资源，掌握度达到 70% 后再推进后续节点。'
             }
           </p>
         </div>
-        {!accepted ? (
+        {hasWeakNodes && !accepted ? (
           <button
             onClick={() => {
               setAccepted(true);
               // 找到掌握度最低的薄弱节点，跳转到对应学习资源
-              const weakest = pathNodes
-                .filter((n) => n.status === 'review')
-                .sort((a, b) => a.mastery - b.mastery)[0];
+              const weakest = weakNodes.sort((a, b) => a.mastery - b.mastery)[0];
               if (weakest) {
                 setSelected(weakest);
                 setFocusId(weakest.id);
@@ -134,7 +217,7 @@ export default function LearningPath() {
           <div className="flex items-center justify-between border-b border-line px-5 py-3">
             <div>
               <h2 className="font-display text-base font-semibold text-ink">知识图谱学习路径</h2>
-              <p className="text-xs text-ink-muted">人工智能导论 · 知识点 DAG</p>
+              <p className="text-xs text-ink-muted">人工智能导论 · 知识点 DAG · 随学随新</p>
             </div>
             <div className="flex items-center gap-3 text-[11px]">
               {Object.entries(statusMeta).map(([k, v]) => (
@@ -146,13 +229,13 @@ export default function LearningPath() {
             </div>
           </div>
           <div className="overflow-x-auto bg-paper-soft/30 p-4">
-            <PathGraph selected={selected} onSelect={setSelected} focusId={focusId} />
+            <PathGraph nodes={dynamicNodes} selected={selected} onSelect={setSelected} focusId={focusId} />
           </div>
         </div>
 
         {/* Node detail */}
         <div className="space-y-5">
-          {selected ? <NodeDetail node={selected} /> : (
+          {selected ? <NodeDetail node={selected} nodes={dynamicNodes} /> : (
             <div className="card flex h-full items-center justify-center p-8 text-sm text-ink-muted">
               点击左侧节点查看详情
             </div>
@@ -163,12 +246,12 @@ export default function LearningPath() {
             <h3 className="font-display text-sm font-semibold text-ink">学习进度概览</h3>
             <div className="mt-3 space-y-2.5">
               {Object.entries(statusMeta).map(([k, v]) => {
-                const count = pathNodes.filter((n) => n.status === k).length;
+                const count = dynamicNodes.filter((n) => n.status === k).length;
                 return (
                   <div key={k} className="flex items-center gap-2.5">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: v.color }} />
                     <span className="flex-1 text-xs text-ink-soft">{v.label}</span>
-                    <span className="text-xs font-semibold text-ink">{count} / {pathNodes.length}</span>
+                    <span className="text-xs font-semibold text-ink">{count} / {dynamicNodes.length}</span>
                   </div>
                 );
               })}
@@ -176,8 +259,8 @@ export default function LearningPath() {
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-paper-deep">
               <div className="flex h-full">
                 {Object.entries(statusMeta).map(([k, v]) => {
-                  const count = pathNodes.filter((n) => n.status === k).length;
-                  const pct = (count / pathNodes.length) * 100;
+                  const count = dynamicNodes.filter((n) => n.status === k).length;
+                  const pct = (count / dynamicNodes.length) * 100;
                   return <div key={k} style={{ width: `${pct}%`, background: v.color }} />;
                 })}
               </div>
@@ -189,7 +272,7 @@ export default function LearningPath() {
   );
 }
 
-function PathGraph({ selected, onSelect, focusId }: { selected: PathNode | null; onSelect: (n: PathNode) => void; focusId: string | null }) {
+function PathGraph({ nodes, selected, onSelect, focusId }: { nodes: PathNode[]; selected: PathNode | null; onSelect: (n: PathNode) => void; focusId: string | null }) {
   const w = 1320;
   const h = 500;
 
@@ -209,7 +292,7 @@ function PathGraph({ selected, onSelect, focusId }: { selected: PathNode | null;
         const from = positions[e.from];
         const to = positions[e.to];
         const isActive = selected?.id === e.from || selected?.id === e.to;
-        const fromNode = pathNodes.find((n) => n.id === e.from)!;
+        const fromNode = nodes.find((n) => n.id === e.from)!;
         const dx = to.x - from.x;
         const dy = to.y - from.y;
         const len = Math.sqrt(dx * dx + dy * dy);
@@ -234,7 +317,7 @@ function PathGraph({ selected, onSelect, focusId }: { selected: PathNode | null;
       })}
 
       {/* nodes */}
-      {pathNodes.map((node) => {
+      {nodes.map((node) => {
         const pos = positions[node.id];
         const meta = statusMeta[node.status];
         const isSelected = selected?.id === node.id;
@@ -298,10 +381,10 @@ function PathGraph({ selected, onSelect, focusId }: { selected: PathNode | null;
   );
 }
 
-function NodeDetail({ node }: { node: PathNode }) {
+function NodeDetail({ node, nodes }: { node: PathNode; nodes: PathNode[] }) {
   const meta = statusMeta[node.status];
-  const prerequisites = pathEdges.filter((e) => e.to === node.id).map((e) => pathNodes.find((n) => n.id === e.from)!);
-  const next = pathEdges.filter((e) => e.from === node.id).map((e) => pathNodes.find((n) => n.id === e.to)!);
+  const prerequisites = pathEdges.filter((e) => e.to === node.id).map((e) => nodes.find((n) => n.id === e.from)!).filter(Boolean) as PathNode[];
+  const next = pathEdges.filter((e) => e.from === node.id).map((e) => nodes.find((n) => n.id === e.to)!).filter(Boolean) as PathNode[];
 
   return (
     <div className="card p-5 animate-fade-up">
