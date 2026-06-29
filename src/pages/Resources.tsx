@@ -326,9 +326,9 @@ function ResourceDrawer({ resource, onClose }: { resource: Resource; onClose: ()
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="relative flex h-full w-full max-w-2xl flex-col bg-paper shadow-lift animate-fade-up">
+      <div className="relative flex h-full w-full flex-col bg-paper shadow-lift animate-fade-up">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-line bg-white px-6 py-5">
+        <div className="flex items-start justify-between border-b border-line bg-white px-8 py-5">
           <div className="flex items-start gap-3">
             <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', meta.bg)}>
               <Icon name={meta.icon} size={20} className={meta.color} />
@@ -347,26 +347,28 @@ function ResourceDrawer({ resource, onClose }: { resource: Resource; onClose: ()
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-white px-6 py-5">
-          {resource.type === 'mindmap' ? (
-            <div className="rounded-xl border border-line bg-paper-soft/40 p-4">
-              <MermaidMindmap content={resource.content} />
-            </div>
-          ) : resource.type === 'quiz' && resource.quizId ? (
-            <div>
-              <MarkdownRenderer content={resource.content} />
-              <div className="mt-6 border-t-2 border-dashed border-line pt-5">
-                <QuizPlayer quiz={findQuizByResource(resource.id)!} />
+        {/* Content - 全屏展示，内容居中保持可读性 */}
+        <div className="flex-1 overflow-y-auto bg-white">
+          <div className="mx-auto max-w-5xl px-8 py-6">
+            {resource.type === 'mindmap' ? (
+              <div className="rounded-xl border border-line bg-paper-soft/40 p-4">
+                <MermaidMindmap content={resource.content} />
               </div>
-            </div>
-          ) : (
-            <MarkdownRenderer content={resource.content} />
-          )}
+            ) : resource.type === 'quiz' && resource.quizId ? (
+              <div>
+                <MarkdownRenderer content={resource.content} />
+                <div className="mt-6 border-t-2 border-dashed border-line pt-5">
+                  <QuizPlayer quiz={findQuizByResource(resource.id)!} />
+                </div>
+              </div>
+            ) : (
+              <MarkdownRenderer content={resource.content} />
+            )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-line bg-white px-6 py-4">
+        <div className="flex items-center justify-between border-t border-line bg-white px-8 py-4">
           <span className="flex items-center gap-1.5 text-xs text-ink-muted">
             <Sparkles size={13} className="text-teal" /> 由 {meta.label}智能体 生成
           </span>
