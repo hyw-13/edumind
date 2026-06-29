@@ -118,6 +118,7 @@ export function computeMasteryTrend(
       if (a.type === 'resource') dailyDelta += 2;
       else if (a.type === 'quiz') dailyDelta += 3;
       else if (a.type === 'tutor') dailyDelta += 1;
+      else if (a.type === 'knowledge') dailyDelta += 2;
     });
     dayQuiz.forEach((q) => {
       dailyDelta += Math.round(q.rate * 5);
