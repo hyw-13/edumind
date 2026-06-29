@@ -28,8 +28,8 @@ export interface LearnedRecord {
 // 学习活动记录（用于活跃天数、本周时长、趋势图等聚合统计）
 export interface StudyActivity {
   id: string;
-  type: 'resource' | 'quiz' | 'tutor' | 'path';
-  typeLabel: string;      // 资源学习 / 答题练习 / 智能答疑 / 路径学习
+  type: 'resource' | 'quiz' | 'tutor' | 'path' | 'knowledge';
+  typeLabel: string;      // 资源学习 / 答题练习 / 智能答疑 / 路径学习 / 知识库学习
   title: string;          // 活动标题
   timestamp: number;      // 毫秒时间戳
   date: string;           // YYYY-MM-DD，便于按天聚合
@@ -84,6 +84,8 @@ interface AppState {
   recordQuizResult: (score: number, total: number, chapter: string) => void;
   // 记录答疑提问（用于推荐与画像）
   recordTutorQuestion: (question: string, effective: boolean) => void;
+  // 记录知识库学习（浏览知识点 → 写入学习活动 + 更新画像，同一天同一知识点只记一次）
+  recordKnowledgeStudy: (point: { id: string; title: string; chapter: string; section: string }) => void;
   resetProfile: () => void;
 }
 
@@ -323,6 +325,39 @@ export const useStore = create<AppState>((set, get) => ({
         `答疑提问：${question.slice(0, 20)}`
       );
     }
+  },
+
+  // 记录知识库学习：同一天同一知识点只记一次，避免刷新即记录
+  recordKnowledgeStudy: (point) => {
+    const ts = Date.now();
+    const todayStr = today();
+    const state = get();
+    // 同一天同一知识点已记录则跳过
+    const already = state.studyActivities.some(
+      (a) => a.type === 'knowledge' && a.title.includes(point.title) && a.date === todayStr
+    );
+    if (already) return;
+    set((s) => ({
+      studyActivities: [
+        {
+          id: `act-${ts}`,
+          type: 'knowledge',
+          typeLabel: '知识库学习',
+          title: `${point.chapter} · ${point.title}`,
+          timestamp: ts,
+          date: todayStr,
+          durationMin: 10, // 知识点阅读平均 10 分钟
+        },
+        ...s.studyActivities,
+      ],
+    }));
+    // 更新画像：知识基础 +2、兴趣 +1
+    get().applyProfileDelta(
+      { knowledgeBase: get().profile.knowledgeBase + 2, interest: get().profile.interest + 1 },
+      'resource',
+      '知识库学习',
+      `学习知识点：${point.title}`
+    );
   },
 
   resetProfile: () => set({

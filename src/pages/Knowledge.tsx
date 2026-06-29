@@ -4,6 +4,7 @@ import { BookOpen, ChevronRight, ChevronDown, Search, Tag, ArrowRight, Layers, F
 import Icon from '@/components/Icon';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { knowledgeBase, type KnowledgePoint, type KnowledgeChapter } from '@/data/knowledgeBase';
+import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
 
 // 章节配色
@@ -21,6 +22,8 @@ export default function Knowledge() {
   const [selectedPoint, setSelectedPoint] = useState<{ point: KnowledgePoint; chapter: KnowledgeChapter; sectionTitle: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
+  // 知识库学习活动记录（随学随新）
+  const recordKnowledgeStudy = useStore((s) => s.recordKnowledgeStudy);
 
   // 统计
   const stats = useMemo(() => {
@@ -51,6 +54,13 @@ export default function Knowledge() {
             if (pt.id === pointId) {
               setSelectedPoint({ point: pt, chapter: ch, sectionTitle: sec.title });
               setExpandedChapters((prev) => new Set(prev).add(ch.id));
+              // 记录知识库学习活动（随学随新）
+              recordKnowledgeStudy({
+                id: pt.id,
+                title: pt.title,
+                chapter: ch.title,
+                section: sec.title,
+              });
               break;
             }
           }
@@ -59,7 +69,7 @@ export default function Knowledge() {
       searchParams.delete('point');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, recordKnowledgeStudy]);
 
   const toggleChapter = (id: string) => {
     setExpandedChapters((prev) => {
@@ -72,6 +82,13 @@ export default function Knowledge() {
 
   const selectPoint = (point: KnowledgePoint, chapter: KnowledgeChapter, sectionTitle: string) => {
     setSelectedPoint({ point, chapter, sectionTitle });
+    // 记录知识库学习活动（随学随新）
+    recordKnowledgeStudy({
+      id: point.id,
+      title: point.title,
+      chapter: chapter.title,
+      section: sectionTitle,
+    });
   };
 
   // 搜索过滤
