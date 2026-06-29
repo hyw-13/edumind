@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { initialProfile, type Profile, type ResourceType } from '@/data/mockData';
 import { dimLabels } from '@/lib/profileExtractor';
 
@@ -94,10 +95,15 @@ const clamp = (v: number) => Math.max(5, Math.min(95, v));
 
 // 当前时间字符串
 const now = () => new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-// 当前日期字符串 YYYY-MM-DD
-const today = () => new Date().toISOString().slice(0, 10);
+// 当前日期字符串 YYYY-MM-DD（本地时区，确保与现实对应）
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
   profile: initialProfile,
   updateHistory: [],
   learnedResources: [],
@@ -351,9 +357,9 @@ export const useStore = create<AppState>((set, get) => ({
         ...s.studyActivities,
       ],
     }));
-    // 更新画像：知识基础 +2、兴趣 +1
+    // 更新画像：知识基础 +1（一点掌握度）、兴趣 +1
     get().applyProfileDelta(
-      { knowledgeBase: get().profile.knowledgeBase + 2, interest: get().profile.interest + 1 },
+      { knowledgeBase: get().profile.knowledgeBase + 1, interest: get().profile.interest + 1 },
       'resource',
       '知识库学习',
       `学习知识点：${point.title}`
@@ -368,4 +374,18 @@ export const useStore = create<AppState>((set, get) => ({
     quizResults: [],
     tutorQuestions: [],
   }),
-}));
+}),
+    {
+      name: 'edumind-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        profile: s.profile,
+        updateHistory: s.updateHistory,
+        learnedResources: s.learnedResources,
+        studyActivities: s.studyActivities,
+        quizResults: s.quizResults,
+        tutorQuestions: s.tutorQuestions,
+      }),
+    }
+  )
+);

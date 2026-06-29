@@ -13,7 +13,7 @@ import {
   computeRadarData, generateSuggestions,
 } from '@/lib/studyStats';
 
-const trendColors = ['#0f766e', '#ea580c', '#e11d48', '#a8a29e', '#0d9488'];
+const trendColors = ['#0f766e', '#ea580c', '#e11d48', '#a8a29e', '#0d9488', '#7c3aed'];
 
 const priorityStyle = {
   high: { label: '高优先', cls: 'bg-rose-pale text-rose', icon: AlertTriangle },
@@ -38,6 +38,9 @@ export default function Report() {
   const activeDays = computeActiveDays(studyActivities);
   const overallMastery = computeOverallMastery(learnedCount, totalResources, accuracyRate, profile.knowledgeBase);
   const healthScore = computeHealthScore(studyActivities, learnedCount);
+  // 连续学习总数（资源 + 知识库）
+  const knowledgeCount = studyActivities.filter((a) => a.type === 'knowledge').length;
+  const totalLearned = learnedCount + knowledgeCount;
 
   // 掌握度变化趋势（基于真实学习活动）
   const masteryTrendData = computeMasteryTrend(studyActivities, quizResults, 30);
@@ -46,6 +49,7 @@ export default function Report() {
     { topic: '资源学习', keywords: ['决策树', 'Transformer', 'A*', '神经网络', '机器学习'] },
     { topic: '答题练习', keywords: ['搜索', '机器学习', '神经网络', '历史'] },
     { topic: '智能答疑', keywords: ['Transformer', '注意力', '深度学习', '强化学习'] },
+    { topic: '知识学习', keywords: [], type: 'knowledge', baseValue: 15 }, // 知识库学习趋势，从 15 开始
     { topic: '综合掌握', keywords: [] }, // 空关键词 = 所有活动
   ]);
 
@@ -109,10 +113,10 @@ export default function Report() {
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-paper-deep">
               <div className="h-full rounded-full bg-gradient-to-r from-teal via-teal-light to-amber transition-all duration-700" style={{ width: `${healthScore}%` }} />
             </div>
-            <p className={cn('mt-3 text-xs', learnedCount > 5 ? 'text-rose font-medium' : 'text-ink-muted')}>
-              {learnedCount > 5
-                ? `短期学习 ${learnedCount} 项资源强度过高，建议适当休息、避免疲劳学习。`
-                : learnedCount === 0
+            <p className={cn('mt-3 text-xs', totalLearned > 10 ? 'text-rose font-medium' : 'text-ink-muted')}>
+              {totalLearned > 10
+                ? `连续学习 ${totalLearned} 项（资源 ${learnedCount} + 知识库 ${knowledgeCount}）强度过高，建议适当休息、避免疲劳学习。`
+                : totalLearned === 0
                 ? '开始学习以建立健康的学习节奏。'
                 : '学习节奏稳定，建议加强薄弱知识点的针对性练习。'}
             </p>

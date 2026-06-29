@@ -4,6 +4,10 @@
 import type { StudyActivity, QuizResult, LearnedRecord } from '@/store/useStore';
 import type { ResourceType } from '@/data/mockData';
 
+// 本地日期字符串 YYYY-MM-DD（确保与现实对应，不受 UTC 偏差影响）
+const localDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 // 资源总数（从 mockData 的 resources 数组获取，此处通过参数传入避免循环依赖）
 export function computeCompletionRate(learnedCount: number, totalResources: number): number {
   if (totalResources <= 0) return 0;
@@ -36,7 +40,7 @@ export function computeStreakDays(activities: StudyActivity[]): number {
   const cursor = new Date();
   // 今天没活动也可以从昨天开始算
   for (let i = 0; i < 30; i++) {
-    const dateStr = cursor.toISOString().slice(0, 10);
+    const dateStr = localDateStr(cursor);
     if (dates.has(dateStr)) {
       streak++;
       cursor.setDate(cursor.getDate() - 1);
@@ -86,9 +90,11 @@ export function computeHealthScore(
   // 答题活动加成（每次 +2，上限 +10）
   const quizCount = activities.filter((a) => a.type === 'quiz').length;
   score += Math.min(10, quizCount * 2);
-  // 短期过度学习惩罚（超过 5 个资源后每个 -4）
-  if (learnedCount > 5) {
-    score -= (learnedCount - 5) * 4;
+  // 连续学习 10 个以上时学习健康度下降（含资源 + 知识库学习）
+  const knowledgeCount = activities.filter((a) => a.type === 'knowledge').length;
+  const totalLearned = learnedCount + knowledgeCount;
+  if (totalLearned > 10) {
+    score -= (totalLearned - 10) * 4;
   }
   return Math.max(40, Math.min(99, score));
 }
@@ -107,7 +113,7 @@ export function computeMasteryTrend(
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().slice(0, 10);
+    const dateStr = localDateStr(date);
     labels.push(dayLabels[date.getDay()]);
 
     // 当天学习活动加成
@@ -118,7 +124,7 @@ export function computeMasteryTrend(
       if (a.type === 'resource') dailyDelta += 2;
       else if (a.type === 'quiz') dailyDelta += 3;
       else if (a.type === 'tutor') dailyDelta += 1;
-      else if (a.type === 'knowledge') dailyDelta += 2;
+      else if (a.type === 'knowledge') dailyDelta += 1; // 知识库学习：一点掌握度
     });
     dayQuiz.forEach((q) => {
       dailyDelta += Math.round(q.rate * 5);
@@ -131,27 +137,31 @@ export function computeMasteryTrend(
 }
 
 // 多个知识点的掌握度趋势（按章节分组）
+// 支持按活动类型过滤（type）和自定义起始值（baseValue）
 export function computeTopicTrends(
   activities: StudyActivity[],
   quizResults: QuizResult[],
-  topics: { topic: string; keywords: string[] }[]
+  topics: { topic: string; keywords: string[]; type?: StudyActivity['type']; baseValue?: number }[]
 ): { topic: string; values: number[] }[] {
   return topics.map((t) => {
-    // 筛选与该主题相关的活动和答题
-    const relevantActivities = activities.filter((a) =>
-      t.keywords.some((kw) => a.title.includes(kw))
-    );
+    // 按类型过滤（如知识库学习）或按关键词过滤
+    const relevantActivities = t.type
+      ? activities.filter((a) => a.type === t.type)
+      : t.keywords.length === 0
+        ? activities // 空关键词 = 所有活动
+        : activities.filter((a) => t.keywords.some((kw) => a.title.includes(kw)));
     const relevantQuiz = quizResults.filter((q) =>
       t.keywords.some((kw) => q.chapter.includes(kw))
     );
-    const base = 30 + relevantActivities.length * 5 + relevantQuiz.length * 8;
+    // 使用自定义起始值或默认计算
+    const base = t.baseValue ?? (30 + relevantActivities.length * 5 + relevantQuiz.length * 8);
     const values: number[] = [];
     const today = new Date();
     let prev = Math.min(95, base);
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().slice(0, 10);
+      const dateStr = localDateStr(date);
       const dayCount = relevantActivities.filter((a) => a.date === dateStr).length;
       prev = Math.min(100, prev + dayCount * 3);
       values.push(prev);
