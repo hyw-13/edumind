@@ -11,7 +11,8 @@ import RadarChart from '@/components/RadarChart';
 import { recommend, hotTopics, type RecommendResult } from '@/lib/recommender';
 import { useStore, type ProfileUpdateRecord } from '@/store/useStore';
 import { profileDimensions } from '@/data/mockData';
-import { knowledgeBase, type KnowledgePoint } from '@/data/knowledgeBase';
+import { knowledgeBase, knowledgeStats, type KnowledgePoint } from '@/data/knowledgeBase';
+import { resources } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
 // 根据知识点 ID 查找
@@ -114,8 +115,8 @@ export default function Discover() {
         {!searched ? (
           <div className="grid gap-3 pt-2 sm:grid-cols-3">
             {[
-              { icon: 'BookOpen', title: '8 章知识库', desc: '结构化 AI 知识体系，40+ 知识点', to: '/knowledge' },
-              { icon: 'Library', title: '25 项资源', desc: '文档/题库/思维导图/代码/阅读', to: '/resources' },
+              { icon: 'BookOpen', title: `${knowledgeStats.totalChapters} 章知识库`, desc: `结构化 AI 知识体系，${knowledgeStats.totalPoints} 个知识点`, to: '/knowledge' },
+              { icon: 'Library', title: `${resources.length} 项资源`, desc: '文档/题库/思维导图/代码/阅读', to: '/resources' },
               { icon: 'Route', title: '16 节点路径', desc: '完整 DAG 学习路径', to: '/path' },
             ].map((card, i) => (
               <button key={i} onClick={() => navigate(card.to)} className="card group p-4 text-left transition-all hover:-translate-y-1 hover:shadow-lift animate-fade-up" style={{ animationDelay: `${180 + i * 80}ms` }}>
