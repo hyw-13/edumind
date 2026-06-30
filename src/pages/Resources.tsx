@@ -233,9 +233,12 @@ export default function Resources() {
                   </div>
                 ) : activeWorkflow.type === 'quiz' ? (
                   <div>
-                    <MarkdownRenderer content={generatedContent} />
-                    <div className="mt-5 border-t-2 border-dashed border-line pt-4">
-                      {!showQuizPlayer || !genQuiz ? (
+                    {!showQuizPlayer || !genQuiz ? (
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-2 rounded-lg bg-teal-pale/40 px-4 py-3 text-sm text-teal-dark">
+                          <Sparkles size={14} className="mt-0.5 shrink-0" />
+                          <span>AI 智能体已根据主题「{genTopic}」生成练习题，点击下方按钮开始答题，答题后可查看每题解析。</span>
+                        </div>
                         <button
                           onClick={() => {
                             setGenQuiz(parseGeneratedQuiz(generatedContent, genTopic));
@@ -245,10 +248,10 @@ export default function Resources() {
                         >
                           <Icon name="ListChecks" size={16} /> 开始答题
                         </button>
-                      ) : (
-                        <QuizPlayer quiz={genQuiz} />
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <QuizPlayer quiz={genQuiz} />
+                    )}
                   </div>
                 ) : (
                   <MarkdownRenderer content={generatedContent} />
