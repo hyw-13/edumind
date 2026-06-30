@@ -831,8 +831,115 @@ const chapter8: KnowledgeChapter = {
   ],
 };
 
+// ========== 第九章 生成对抗网络与扩散模型 ==========
+const chapter9: KnowledgeChapter = {
+  id: 'ch9',
+  index: 9,
+  title: '生成对抗网络与扩散模型',
+  subtitle: '从对抗训练到去噪生成的范式演进',
+  summary: '系统讲解生成模型的两大主流范式：GAN 的对抗训练机制与扩散模型的去噪生成原理，并延伸至条件生成与文生图应用。',
+  sections: [
+    {
+      id: 'ch9-s1',
+      title: 'GAN 基础',
+      summary: '生成器与判别器、对抗损失、训练技巧',
+      points: [
+        {
+          id: 'ch9-s1-p1',
+          title: '生成对抗网络原理',
+          summary: '生成器与判别器的零和博弈',
+          detail: '**定义与背景**\n生成对抗网络（Generative Adversarial Network, GAN）由 Ian Goodfellow 于 2014 年提出，核心思想是通过**生成器（Generator）**与**判别器（Discriminator）**的双人零和博弈来学习数据分布。生成器 G 将随机噪声 z 映射为样本 G(z)，判别器 D 试图区分真实样本 x 与生成样本；二者交替优化，最终 G 学到逼近真实数据分布的生成能力。\n\n**目标函数（Minimax 博弈）**\n\n\`min_G max_D V(D, G) = E_{x~p_data}[log D(x)] + E_{z~p_z}[log(1 - D(G(z)))]\`\n\n- D 试图最大化：正确判别真伪\n- G 试图最小化：让 D 难以区分\n- 理论上全局最优时，D(x)=1/2，p_g = p_data\n\n**训练难题与技巧**\n1. **模式崩溃（Mode Collapse）**：G 只能生成少数几种样本，多样性丧失。常用 Minibatch Discrimination、Unrolled GAN、WGAN 缓解\n2. **训练不稳定**：D 过强则 G 梯度消失，D 过弱则 G 学不到东西。技巧：特征匹配、TTUR（两时间尺度更新）、谱归一化（Spectral Norm）\n3. **评估困难**：常用 FID（Fréchet Inception Distance）、IS（Inception Score）\n\n**主流变体演进**\n| 变体 | 创新 | 适用场景 |\n|------|------|----------|\n| DCGAN | 全卷积结构 | 通用图像生成 |\n| WGAN | Wasserstein 距离 | 稳定训练 |\n| WGAN-GP | 梯度惩罚 | 替代权重裁剪 |\n| CycleGAN | 无配对图像转换 | 风格迁移 |\n| StyleGAN | AdaIN 风格注入 | 高清人脸 |\n| BigGAN | 大规模 + 类条件 | ImageNet 生成 |\n\n**小结**：GAN 开创了深度生成模型的对抗训练范式，在图像生成上取得巨大成功，但训练不稳定与模式崩溃是其固有难题，这也是后续扩散模型兴起的重要动因。',
+          keyTerms: ['生成对抗网络', '生成器', '判别器', '对抗损失', '模式崩溃'],
+        },
+      ],
+    },
+    {
+      id: 'ch9-s2',
+      title: '扩散模型',
+      summary: 'DDPM 原理、去噪过程、采样优化',
+      points: [
+        {
+          id: 'ch9-s2-p1',
+          title: '扩散模型原理',
+          summary: '前向加噪与反向去噪',
+          detail: '**定义与背景**\n扩散模型（Diffusion Model）是一类基于**非平衡热力学**思想的生成模型。2020 年 Ho 等人提出的 DDPM（Denoising Diffusion Probabilistic Models）奠定了现代扩散模型的基础。相比 GAN 的对抗训练，扩散模型通过稳定的**去噪过程**学习数据分布，训练更稳定、生成质量更高，已成为图像生成的主流范式（Stable Diffusion、DALL·E、Sora 均基于此）。\n\n**两大过程**\n\n1. **前向扩散（Forward Diffusion）**：逐步向数据添加高斯噪声，T 步后变为纯噪声\n   \`q(x_t | x_{t-1}) = N(x_t; √(1-β_t) x_{t-1}, β_t I)\`\n   其中 β_t 是预定义的方差表（schedule），整体可由 x_0 一步闭式计算：\n   \`x_t = √ᾱ_t · x_0 + √(1-ᾱ_t) · ε\`，ᾱ_t = ∏(1-β_i)\n\n2. **反向去噪（Reverse Diffusion）**：训练神经网络 ε_θ 学习从 x_t 预测噪声，逐步去噪恢复样本\n   训练目标简化为：\`L = E[||ε - ε_θ(x_t, t)||²]\`\n   即让网络预测加入的噪声 ε，而非直接预测 x_0，这是 DDPM 的关键简化。\n\n**采样优化**\n原始 DDPM 需上千步去噪，速度极慢。后续改进大幅加速：\n- **DDIM**（2020）：非马尔可夫采样，50 步即可达千步效果\n- **DPM-Solver**（2022）：基于 ODE 求解器，10-20 步高质量采样\n- **Consistency Model**（OpenAI 2023）：单步或少步生成\n- **Latent Diffusion**（Stable Diffusion）：在 VAE 潜空间扩散，大幅降低算力\n\n**架构与训练细节**\n- 去噪网络多用 U-Net（带跳跃连接）+ 时间步嵌入（sinusoidal）+ 注意力\n- 方差表：线性（DDPM 原版）、余弦（improved DDPM）\n- 条件注入：cross-attention 注入文本嵌入\n\n**对比**\n| 维度 | GAN | VAE | 扩散模型 |\n|------|-----|-----|----------|\n| 训练稳定性 | 差 | 好 | 好 |\n| 生成质量 | 高 | 中 | 高 |\n| 多样性 | 低 | 高 | 高 |\n| 采样速度 | 快 | 快 | 慢（可优化）|\n| 理论清晰度 | 弱 | 中 | 强 |\n\n**小结**：扩散模型用稳定的去噪过程替代不稳定的对抗博弈，以更慢的采样换取更高质量与多样性，是生成模型从"对抗"到"去噪"的范式转移。',
+          keyTerms: ['扩散模型', 'DDPM', '前向扩散', '反向去噪', 'DDIM'],
+        },
+      ],
+    },
+    {
+      id: 'ch9-s3',
+      title: '条件生成',
+      summary: 'CGAN、ControlNet、文生图',
+      points: [
+        {
+          id: 'ch9-s3-p1',
+          title: '条件生成与文生图',
+          summary: '从 CGAN 到 ControlNet 的可控生成',
+          detail: '**定义与背景**\n条件生成（Conditional Generation）指在生成过程中注入额外条件（类别、文本、图像、布局等），实现对生成内容的可控引导。文生图（Text-to-Image）是其最热门的应用形态，代表系统 Stable Diffusion、DALL·E 3、Midjourney 已深刻改变创意产业。\n\n**条件生成技术演进**\n\n1. **CGAN（Conditional GAN, 2014）**：将类别标签拼接进生成器与判别器输入，实现类别条件生成\n2. **StackGAN / AttnGAN**：文本生成图像的早期工作，使用注意力机制\n3. **CLIP 引导**：OpenAI 2021 年提出 CLIP，建立图文对齐空间，成为文生图的条件编码器基础\n4. **Classifier-Free Guidance（CFG, 2022）**：训练时随机丢弃条件，推理时放大条件方向，显著提升条件遵循度与生成质量，是现代扩散模型的标配\n   \`ε̃ = ε_∅ + w·(ε_c - ε_∅)\`，w 为引导强度（典型 7.5）\n5. **ControlNet（2023）**：在冻结的扩散 U-Net 上外挂可训练副本，注入边缘、深度、姿态、分割等空间条件，实现像素级精确控制\n6. **T2I-Adapter、IP-Adapter**：轻量化条件注入方案\n\n**文生图系统架构**\n\`\`\`\n文本 prompt → 文本编码器（CLIP/T5）→ 条件嵌入\n                                  ↓ (cross-attention)\n随机噪声 → 扩散 U-Net 去噪（潜空间）→ VAE 解码 → 图像\n\`\`\`\n\n**主流文生图模型**\n| 模型 | 机构 | 特点 |\n|------|------|------|\n| Stable Diffusion | Stability AI | 开源、生态丰富（LoRA/ControlNet）|\n| DALL·E 3 | OpenAI | 提示词理解强、集成 ChatGPT |\n| Midjourney | Midjourney | 艺术风格突出 |\n| Imagen | Google | 高保真、Photoreal |\n| Flux | Black Forest Labs | 新一代开源 SOTA |\n\n**可控生成的应用**\n- 图生图（img2img）、图像修补（inpainting）、图像外扩（outpainting）\n- 风格迁移、角色一致性（LoRA 微调）\n- 工业：电商图、广告素材、游戏资产、建筑效果图\n\n**挑战**\n- 提示词工程门槛（Prompt Engineering）\n- 多指代、空间关系、文本渲染（图中文字）仍不完美\n- 版权与深度伪造风险\n\n**小结**：条件生成让生成模型从"随机生成"走向"可控创作"，ControlNet 与 CFG 是当前可控文生图的两大基石，催生了 AI 艺术与 AIGC 产业浪潮。',
+          keyTerms: ['条件生成', 'CGAN', 'ControlNet', '文生图', 'Classifier-Free Guidance'],
+        },
+      ],
+    },
+  ],
+};
+
+// ========== 第十章 AI 前沿与交叉应用 ==========
+const chapter10: KnowledgeChapter = {
+  id: 'ch10',
+  index: 10,
+  title: 'AI 前沿与交叉应用',
+  subtitle: '多模态、具身智能与 AI for Science',
+  summary: '探讨 AI 最前沿的三大交叉方向：多模态大模型、具身智能与机器人、AI for Science，展望通向 AGI 的关键路径。',
+  sections: [
+    {
+      id: 'ch10-s1',
+      title: '多模态大模型',
+      summary: 'CLIP、GPT-4V、架构融合',
+      points: [
+        {
+          id: 'ch10-s1-p1',
+          title: '多模态大模型原理',
+          summary: '图文音视频的统一理解与生成',
+          detail: '**定义与背景**\n多模态大模型（Multimodal Large Model, MLM）指能同时理解与生成多种模态（文本、图像、音频、视频）的大模型。人类智能天然是多模态的（眼看、耳听、口说），多模态被视为通向 AGI 的必经之路。2023 年 GPT-4V 发布标志多模态大模型进入主流，2024 年 GPT-4o、Gemini 1.5、Claude 3 实现原生多模态交互。\n\n**关键技术脉络**\n\n1. **CLIP（OpenAI, 2021）**：对比学习对齐图文表示\n   - 4 亿图文对训练，最大化匹配图文的余弦相似度\n   - 学习到通用的图文嵌入空间，成为多模态对齐基石\n   - 衍生：ALIGN、EVA-CLIP、SigLIP\n\n2. **BLIP / BLIP-2（Salesforce）**：统一理解与生成的视觉-语言预训练，Q-Former 桥接冻结的视觉编码器与 LLM\n\n3. **LLaVA**：开源多模态范式——视觉编码器（CLIP）+ 投影层 + LLM，用 GPT-4 生成多模态指令数据微调\n\n4. **GPT-4V / GPT-4o**：原生多模态，端到端训练而非简单拼接，支持图像理解、OCR、图表推理、视频理解\n\n5. **Gemini**：Google 原生多模态架构，支持超长上下文（1M+ token）与视频理解\n\n**架构融合的三大范式**\n| 范式 | 思路 | 代表 |\n|------|------|------|\n| 模块拼接 | 视觉编码器 + LLM | LLaVA、MiniGPT-4 |\n| 投影桥接 | Q-Former / MLP 对齐 | BLIP-2、LLaVA |\n| 原生多模态 | 从头多模态训练 | GPT-4o、Gemini |\n\n**多模态对齐原理**\n核心是让不同模态的表示在共享嵌入空间中对齐：\n- **对比学习**：拉近匹配对、推远不匹配对（CLIP）\n- **交叉注意力**：文本 query 关注视觉 token（Flamingo）\n- **混合专家（MoE）**：不同模态路由到不同专家\n\n**生成能力**\n- 文生图：Stable Diffusion、DALL·E 3（见第九章）\n- 文生视频：Sora（OpenAI 2024，DiT 架构）、Runway Gen-3、Kling、可灵\n- 文生音频：Suno、ElevenLabs\n- 全模态：GPT-4o 实时语音 + 视觉 + 文本交互\n\n**挑战与前沿**\n- 幻觉问题：多模态模型更易"看到"不存在的内容\n- 视频理解的长时序与因果推理\n- 模态对齐的语义鸿沟\n- 评估基准缺失（MMMU、MMBench 正在完善）\n\n**小结**：多模态大模型是 LLM 的自然延伸，从"读懂文字"到"看懂世界"，原生多模态架构正成为新标准，是通向具身智能与 AGI 的关键环节。',
+          keyTerms: ['多模态大模型', 'CLIP', 'GPT-4V', '架构融合', '对齐'],
+        },
+      ],
+    },
+    {
+      id: 'ch10-s2',
+      title: '具身智能与机器人',
+      summary: 'RT-2、VLA 模型、仿真环境',
+      points: [
+        {
+          id: 'ch10-s2-p1',
+          title: '具身智能',
+          summary: 'VLA 模型与机器人学习',
+          detail: '**定义与背景**\n具身智能（Embodied AI）指 AI 拥有"身体"，在物理世界中感知、推理并执行动作。区别于纯数字世界的 LLM，具身智能强调"感知-决策-行动"闭环，是连接虚拟智能与物理世界的桥梁。2023 年以来，大模型驱动的 VLA（Vision-Language-Action）模型与人形机器人爆发，被视为 AI 的下一个浪潮。\n\n**核心范式：VLA 模型**\nVLA（视觉-语言-动作）模型将多模态大模型扩展到动作输出，输入图像 + 语言指令，输出机器人动作序列。\n\n1. **RT-2（Google DeepMind, 2023）**：基于 PaLI-X 大模型，将机器人动作离散化为 token，实现"大模型即机器人策略"\n   - 涌现能力：能用未见过的新指令泛化\n   - 思维链推理：可分解复杂任务\n2. **RT-1 / RT-X**：Transformer 策略，跨机器人数据集泛化\n3. **OpenVLA、π0（Physical Intelligence, 2024）**：开源与通用 VLA 框架\n4. **Octo**：伯克利开源通用机器人 Transformer\n\n**仿真环境（Sim2Real）**\n真实机器人数据采集昂贵且危险，仿真训练 + 迁移是主流路径：\n| 仿真器 | 特点 |\n|--------|------|\n| Isaac Sim（NVIDIA）| 光追、物理精确、GPU 加速 |\n| MuJoCo | 接触动力学精确、DeepMind 收购后开源 |\n| Habitat（Meta）| 室内导航仿真 |\n| Genesis | 2024 生成式物理仿真平台 |\n- **Sim2Real Gap**：仿真与现实物理参数差异，常用域随机化（Domain Randomization）缓解\n\n**代表机器人与人形机器人**\n| 产品 | 公司 | 特点 |\n|------|------|------|\n| Optimus（擎天柱）| Tesla | 目标工厂与家庭，量产化 |\n| Figure 02 | Figure AI + OpenAI | 对话 + 家务操作 |\n| Atlas（电动版）| 波士顿动力 | RL 运动控制 |\n| 宇树 H1/G1 | 宇树科技 | 性价比、运动性能强 |\n| 智元远征 A1 | 智元机器人 | 国产人形新势力 |\n| GR-1/GR-2 | 智元/傅利叶 | 服务与科研 |\n\n**关键技术**\n- **模仿学习（BC）**：从人类遥操作演示学习，行为克隆\n- **强化学习**：在仿真中自我探索优化（如 ANYmal 四足机器人）\n- **大规模数据集**：Open X-Embodiment（22 机构联合，百万+ 轨迹）\n- **灵巧操作**：抓取、工具使用、双手协作\n\n**挑战**\n- 数据稀缺：真实机器人数据采集成本极高\n- 泛化难：新物体、新场景、新指令\n- 长程任务规划\n- 安全性：物理交互的人身安全\n- 硬件瓶颈：电机、减速器、传感器成本\n\n**小结**：具身智能是 AI 从"数字大脑"走向"物理身体"的关键跃迁，VLA 模型 + 人形机器人 + 仿真训练构成新范式，被视为继 LLM 之后最具变革性的 AI 方向。',
+          keyTerms: ['具身智能', 'VLA 模型', 'RT-2', 'Sim2Real', '人形机器人'],
+        },
+      ],
+    },
+    {
+      id: 'ch10-s3',
+      title: 'AI for Science',
+      summary: 'AlphaFold、材料发现、科学计算',
+      points: [
+        {
+          id: 'ch10-s3-p1',
+          title: 'AI 驱动的科学研究',
+          summary: '第五范式的崛起',
+          detail: '**定义与背景**\nAI for Science 指用人工智能加速科学发现，已成为继实验、理论、计算、数据驱动后的**"第五范式"**。AI 能从海量数据中发现人类难以察觉的模式，显著缩短科研周期、降低成本。DeepMind 的 AlphaFold 是里程碑事件，证明 AI 能解决困扰科学界 50 年的难题。\n\n**里程碑案例**\n\n1. **AlphaFold 2/3（DeepMind）**：蛋白质结构预测\n   - 困扰生物学 50 年的"蛋白质折叠问题"被基本解决\n   - AlphaFold 2 在 CASP14（2020）达到实验级精度\n   - AlphaFold DB 已覆盖 2 亿+ 蛋白结构，超过 PDB 数据库 1000 倍\n   - AlphaFold 3（2024）扩展到 DNA、RNA、配体复合物\n   - 2024 诺贝尔化学奖授予 Hassabis 与 Jumper\n\n2. **材料发现**\n   - **GNoME（DeepMind, 2023）**：发现 220 万种新晶体材料，相当于 800 年人工探索\n   - **Microsoft Azure Quantum**：发现新型电池材料\n   - **Atomly、深势科技**：国内材料 AI 平台\n\n3. **数学与定理证明**\n   - **AlphaProof / AlphaGeometry（DeepMind, 2024）**：IMO 数学奥赛银牌水平\n   - Lean + AI：形式化定理证明\n\n4. **气象与气候**\n   - **Pangu-Weather（华为, 2023）**：首个精度超传统数值预报的 AI 气象模型\n   - **GraphCast（DeepMind）**：图神经网络全球天气预报\n   - **盘古气象**：1 万倍速度提升\n\n5. **药物发现**\n   - 蛋白结构预测 → 靶点发现 → 分子生成 → 药效预测全链路\n   - AlphaFold 3 直接预测药物-靶点结合\n   - Insilico Medicine：AI 设计药物进入临床\n\n6. **物理与化学计算**\n   - **AI 解决偏微分方程**：PINN（物理信息神经网络）、FNO\n   - **量子化学**：DeepMD-kit 分子动力学加速百万倍\n   - **核聚变控制**：DeepMind 用 RL 控制托卡马克等离子体\n\n**方法论共性**\n| 要素 | 说明 |\n|------|------|\n| 物理先验嵌入 | 等变性、守恒律、对称性 |\n| 大规模科学数据 | PDB、Materials Project、ERA5 |\n| 专用架构 | 等变神经网络（SE(3)-Transformer）、GNN |\n| 可解释与可验证 | 科学结论需实验或仿真验证 |\n\n**影响与展望**\n- 科研范式变革：从"假设驱动"到"数据 + AI 驱动"假设生成\n- 跨学科协作：AI 研究者 + 领域科学家\n- 2024 诺贝尔物理奖（Hopfield、Hinton）与化学奖（AlphaFold）双双授予 AI，标志 AI for Science 获得最高学术认可\n\n**挑战**\n- 数据稀缺与质量不均\n- 物理一致性与泛化能力\n- 可解释性：科学发现需可理解机理\n- 评估困难：实验验证周期长\n\n**小结**：AI for Science 让 AI 从"工具"升级为"科学发现者"，正在重塑生物学、化学、材料、气象、数学等多个学科，是 AI 造福人类最具深远意义的应用方向之一。',
+          keyTerms: ['AI for Science', 'AlphaFold', '材料发现', '科学计算', '第五范式'],
+        },
+      ],
+    },
+  ],
+};
+
 export const knowledgeBase: KnowledgeChapter[] = [
   chapter1, chapter2, chapter3, chapter4, chapter5, chapter6, chapter7, chapter8,
+  chapter9, chapter10,
 ];
 
 // 工具函数：按 ID 查找知识点
