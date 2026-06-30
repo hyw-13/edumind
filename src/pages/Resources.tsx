@@ -470,9 +470,12 @@ function parseGeneratedQuiz(content: string, topic: string): Quiz {
     const difficulty = diffMap[headerMatch[3]];
     const afterHeader = block.substring(block.indexOf(headerMatch[0]) + headerMatch[0].length);
 
-    // 题干：首个 ** 加粗段
-    const questionMatch = afterHeader.match(/\*\*(.+?)\*\*/);
-    const question = questionMatch ? questionMatch[1].trim() : `${topic} 相关问题 ${qNum}`;
+    // 题干：匹配 **题干**：xxx 格式，捕获冒号后的真实题目内容
+    const questionMatch = afterHeader.match(/\*\*题干\*\*[：:]\s*([^\n]+)/);
+    let question = questionMatch ? questionMatch[1].trim() : '';
+    // 移除可能残留的 ** 加粗标记
+    question = question.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*/g, '').trim();
+    if (!question) question = `${topic} 相关问题 ${qNum}`;
 
     // 选项：- A. xxx / - A、xxx / - A) xxx
     const options: string[] = [];
