@@ -1,15 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Circle, Clock, AlertCircle, Target, ArrowRight, Sparkles, RotateCcw, Check } from 'lucide-react';
-import { pathNodes, pathEdges, type PathNode } from '@/data/mockData';
+import { pathNodes, pathEdges, resources, resourceTypeMeta, type PathNode, type ResourceType, type Resource } from '@/data/mockData';
 import { useStore } from '@/store/useStore';
+import Icon from '@/components/Icon';
 import { cn } from '@/lib/utils';
-
-// 薄弱节点 → 对应学习资源映射
-const weakNodeResources: Record<string, string> = {
-  n10: 'res5', // 决策树与 SVM → 决策树 ID3/C4.5/CART 实战
-  n7: 'res3',  // 搜索技术 → A* 搜索算法专项练习
-};
 
 // 学习路径节点 → 关联学习资源映射（用于动态计算掌握度）
 const nodeRelatedResources: Record<string, string[]> = {
@@ -112,7 +107,6 @@ export default function LearningPath() {
     dynamicNodes.find((n) => n.status === 'review') ?? dynamicNodes.find((n) => n.status === 'current') ?? null,
   );
   const [focusId, setFocusId] = useState<string | null>(null);
-  const [accepted, setAccepted] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -151,15 +145,15 @@ export default function LearningPath() {
       {/* Adjustment banner */}
       <div className={cn(
         'mb-5 flex items-start gap-3 rounded-xl border p-4 animate-fade-up transition-all duration-300',
-        accepted || !hasWeakNodes
+        !hasWeakNodes
           ? 'border-teal/30 bg-teal-pale/30'
           : 'border-amber/30 bg-amber-pale/30'
       )}>
         <div className={cn(
           'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-          accepted || !hasWeakNodes ? 'bg-teal/15' : 'bg-amber/15'
+          !hasWeakNodes ? 'bg-teal/15' : 'bg-amber/15'
         )}>
-          {accepted || !hasWeakNodes
+          {!hasWeakNodes
             ? <CheckCircle2 size={18} className="text-teal" />
             : <AlertCircle size={18} className="text-amber" />
           }
@@ -168,34 +162,30 @@ export default function LearningPath() {
           <div className="text-sm font-medium text-ink">
             {!hasWeakNodes
               ? '当前无薄弱环节 · 学习路径健康'
-              : accepted
-                ? '已接受路径调整 · 复习节点已锁定'
-                : `路径规划智能体检测到 ${weakNodes.length} 个薄弱环节`}
+              : `路径规划智能体检测到 ${weakNodes.length} 个薄弱环节`}
           </div>
           <p className="mt-0.5 text-xs text-ink-muted">
             {!hasWeakNodes
               ? '各节点掌握度良好，建议按路径顺序继续推进后续学习。'
-              : accepted
-                ? '已将薄弱节点标记为优先复习。掌握度达到 70% 后可继续推进后续节点。'
-                : weakNodes.map((n) => `「${n.label}」${n.mastery}%`).join('、') + '，建议优先复习对应资源，掌握度达到 70% 后再推进后续节点。'
+              : weakNodes.map((n) => `「${n.label}」${n.mastery}%`).join('、') + '，建议优先复习对应资源，掌握度达到 70% 后再推进后续节点。'
             }
           </p>
         </div>
-        {hasWeakNodes && !accepted ? (
+        {hasWeakNodes ? (
           <button
             onClick={() => {
-              setAccepted(true);
-              // 找到掌握度最低的薄弱节点，跳转到对应学习资源
-              const weakest = weakNodes.sort((a, b) => a.mastery - b.mastery)[0];
+              // 每次点击都找到掌握度最低的薄弱节点，选中并跳转到对应资源
+              const weakest = [...weakNodes].sort((a, b) => a.mastery - b.mastery)[0];
               if (weakest) {
                 setSelected(weakest);
                 setFocusId(weakest.id);
                 setTimeout(() => setFocusId(null), 3000);
-                // 延迟跳转，让用户先看到横幅状态变化和高亮闪烁
-                const resourceId = weakNodeResources[weakest.id];
-                if (resourceId) {
+                // 优先跳转第一个未学资源，否则跳转第一个关联资源
+                const relatedIds = nodeRelatedResources[weakest.id] || [];
+                const targetResourceId = relatedIds.find((rid) => !learnedResourceIds.has(rid)) || relatedIds[0];
+                if (targetResourceId) {
                   setTimeout(() => {
-                    navigate(`/resources?open=${resourceId}`);
+                    navigate(`/resources?open=${targetResourceId}`);
                   }, 1200);
                 }
               }
@@ -206,7 +196,7 @@ export default function LearningPath() {
           </button>
         ) : (
           <span className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-2 text-xs font-medium text-white">
-            <Check size={13} /> 已接受
+            <Check size={13} /> 路径健康
           </span>
         )}
       </div>
@@ -235,7 +225,7 @@ export default function LearningPath() {
 
         {/* Node detail */}
         <div className="space-y-5">
-          {selected ? <NodeDetail node={selected} nodes={dynamicNodes} /> : (
+          {selected ? <NodeDetail node={selected} nodes={dynamicNodes} learnedResourceIds={learnedResourceIds} /> : (
             <div className="card flex h-full items-center justify-center p-8 text-sm text-ink-muted">
               点击左侧节点查看详情
             </div>
@@ -381,10 +371,25 @@ function PathGraph({ nodes, selected, onSelect, focusId }: { nodes: PathNode[]; 
   );
 }
 
-function NodeDetail({ node, nodes }: { node: PathNode; nodes: PathNode[] }) {
+function NodeDetail({ node, nodes, learnedResourceIds }: { node: PathNode; nodes: PathNode[]; learnedResourceIds: Set<string> }) {
+  const navigate = useNavigate();
+  // 订阅 store，确保学到新资源时 NodeDetail 自动刷新
+  const liveLearned = useStore((s) => s.learnedResources);
+  const learnedIds = useMemo(
+    () => new Set(liveLearned.map((r) => r.resourceId)),
+    [liveLearned],
+  );
+
   const meta = statusMeta[node.status];
   const prerequisites = pathEdges.filter((e) => e.to === node.id).map((e) => nodes.find((n) => n.id === e.from)!).filter(Boolean) as PathNode[];
   const next = pathEdges.filter((e) => e.from === node.id).map((e) => nodes.find((n) => n.id === e.to)!).filter(Boolean) as PathNode[];
+
+  // 当前节点关联的推荐学习资源（按顺序）
+  const relatedResourceIds = nodeRelatedResources[node.id] || [];
+  const relatedResources = relatedResourceIds
+    .map((rid) => resources.find((r) => r.id === rid))
+    .filter(Boolean) as Resource[];
+  const learnedCount = relatedResourceIds.filter((rid) => learnedIds.has(rid)).length;
 
   return (
     <div className="card p-5 animate-fade-up">
@@ -436,15 +441,61 @@ function NodeDetail({ node, nodes }: { node: PathNode; nodes: PathNode[] }) {
         </div>
       )}
 
+      {relatedResources.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-ink-soft">
+              <Sparkles size={13} className="text-teal" /> 推荐学习资源
+            </div>
+            <span className="text-[11px] text-ink-faint">{learnedCount}/{relatedResources.length} 已学</span>
+          </div>
+          <div className="mt-2 space-y-2">
+            {relatedResources.map((r, idx) => {
+              const rMeta = resourceTypeMeta[r.type as ResourceType];
+              const isLearned = learnedIds.has(r.id);
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => navigate(`/resources?open=${r.id}`)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-all hover:border-teal/30 hover:bg-white hover:shadow-soft',
+                    isLearned ? 'border-teal/20 bg-teal-pale/20' : 'border-line bg-paper-soft/40'
+                  )}
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-pale text-[11px] font-semibold text-teal">
+                    {idx + 1}
+                  </span>
+                  <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', rMeta.bg)}>
+                    <Icon name={rMeta.icon} size={15} className={rMeta.color} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs font-medium text-ink">{r.title}</div>
+                    <div className="truncate text-[11px] text-ink-muted">{rMeta.label}{r.duration ? ` · ${r.duration}` : ''}</div>
+                  </div>
+                  {isLearned && (
+                    <CheckCircle2 size={14} className="shrink-0 text-teal" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 rounded-lg border border-line bg-paper-soft/40 p-3">
         <div className="flex items-center gap-1.5 text-[11px] font-medium text-teal">
           <Sparkles size={12} /> 智能体建议
         </div>
         <p className="mt-1 text-xs text-ink-soft">
-          {node.status === 'review' && '该节点掌握度偏低，建议重做练习题并观看视频讲解巩固。'}
-          {node.status === 'current' && '正在学习中，建议按推荐顺序完成文档阅读与练习。'}
-          {node.status === 'todo' && '尚未开始，建议先完成所有前置知识再进入。'}
-          {node.status === 'done' && '已掌握，可继续推进后续节点。'}
+          {relatedResources.length > 0
+            ? `该节点关联 ${relatedResources.length} 项学习资源，建议按顺序 ${relatedResources.map((_, i) => i + 1).join('→')} 完成学习，预计可提升掌握度至 70%+`
+            : node.status === 'review'
+              ? '该节点掌握度偏低，建议重做练习题并观看视频讲解巩固。'
+              : node.status === 'current'
+                ? '正在学习中，建议按推荐顺序完成文档阅读与练习。'
+                : node.status === 'todo'
+                  ? '尚未开始，建议先完成所有前置知识再进入。'
+                  : '已掌握，可继续推进后续节点。'}
         </p>
       </div>
     </div>

@@ -36,6 +36,8 @@ export default function Resources() {
   const [activeWorkflow, setActiveWorkflow] = useState<AgentWorkflow | null>(null);
   const [genFinished, setGenFinished] = useState(false);
   const [showGenResult, setShowGenResult] = useState(false);
+  const [genQuiz, setGenQuiz] = useState<Quiz | null>(null);
+  const [showQuizPlayer, setShowQuizPlayer] = useState(false);
   const profile = useStore((s) => s.profile);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -87,6 +89,8 @@ export default function Resources() {
     setShowGenResult(false);
     setSelectedType(null);
     setGenTopic('');
+    setGenQuiz(null);
+    setShowQuizPlayer(false);
   };
 
   return (
@@ -225,6 +229,25 @@ export default function Resources() {
                     </div>
                     <div className="rounded-lg border border-line bg-paper-soft/40 p-4">
                       <MermaidMindmap content={generatedContent} />
+                    </div>
+                  </div>
+                ) : activeWorkflow.type === 'quiz' ? (
+                  <div>
+                    <MarkdownRenderer content={generatedContent} />
+                    <div className="mt-5 border-t-2 border-dashed border-line pt-4">
+                      {!showQuizPlayer || !genQuiz ? (
+                        <button
+                          onClick={() => {
+                            setGenQuiz(parseGeneratedQuiz(generatedContent, genTopic));
+                            setShowQuizPlayer(true);
+                          }}
+                          className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose px-4 py-3 text-sm font-medium text-white shadow-soft transition-all hover:opacity-90"
+                        >
+                          <Icon name="ListChecks" size={16} /> 开始答题
+                        </button>
+                      ) : (
+                        <QuizPlayer quiz={genQuiz} />
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -416,6 +439,90 @@ function arraysEqual(a: number[], b: number[]): boolean {
   const sa = [...a].sort();
   const sb = [...b].sort();
   return sa.every((v, i) => v === sb[i]);
+}
+
+// 解析多智能体生成的 Markdown 题目为可交互的 Quiz 对象
+// 格式：## 第 X 题（单选/多选/判断 · 难度）+ **题干** + - A. 选项 + **答案** + **解析** + **知识点**
+function parseGeneratedQuiz(content: string, topic: string): Quiz {
+  const questions: QuizQuestion[] = [];
+  const blocks = content.split(/^---$/m);
+
+  const typeMap: Record<string, QuizQuestion['type']> = {
+    '单选': 'single',
+    '多选': 'multi',
+    '判断': 'truefalse',
+  };
+  const diffMap: Record<string, QuizQuestion['difficulty']> = {
+    '入门': 'easy',
+    '进阶': 'medium',
+    '高阶': 'hard',
+  };
+
+  for (const block of blocks) {
+    const headerMatch = block.match(/## 第\s*(\d+)\s*题[（(](单选|多选|判断)\s*[·•]\s*(入门|进阶|高阶)[）)]/);
+    if (!headerMatch) continue;
+
+    const qNum = parseInt(headerMatch[1], 10);
+    const type = typeMap[headerMatch[2]];
+    const difficulty = diffMap[headerMatch[3]];
+    const afterHeader = block.substring(block.indexOf(headerMatch[0]) + headerMatch[0].length);
+
+    // 题干：首个 ** 加粗段
+    const questionMatch = afterHeader.match(/\*\*(.+?)\*\*/);
+    const question = questionMatch ? questionMatch[1].trim() : `${topic} 相关问题 ${qNum}`;
+
+    // 选项：- A. xxx / - A、xxx / - A) xxx
+    const options: string[] = [];
+    const optionRe = /^-\s+([A-Z])[.、)]\s*(.+)$/gm;
+    let m: RegExpExecArray | null;
+    while ((m = optionRe.exec(afterHeader)) !== null) {
+      options.push(m[2].replace(/\s*[✓✗]\s*$/, '').trim());
+    }
+    // 判断题无显式选项，使用默认
+    if (type === 'truefalse' && options.length === 0) {
+      options.push('正确', '错误');
+    }
+
+    // 答案：**答案**：C / A、B、D / 正确 / 错误
+    const answerMatch = afterHeader.match(/\*\*答案\*\*[：:]\s*(.+?)(?:\n|$)/);
+    let answer: number[] = [];
+    if (answerMatch) {
+      const ans = answerMatch[1].trim();
+      if (type === 'truefalse') {
+        answer = ans.includes('正确') ? [0] : [1];
+      } else {
+        const letters = ans.match(/[A-Z]/g) || [];
+        answer = letters.map((l) => l.charCodeAt(0) - 65);
+      }
+    }
+
+    // 解析
+    const explanationMatch = afterHeader.match(/\*\*解析\*\*[：:]\s*(.+)/);
+    const explanation = explanationMatch ? explanationMatch[1].trim() : '';
+
+    // 知识点
+    const kpMatch = afterHeader.match(/\*\*知识点\*\*[：:]\s*(.+?)(?:\n|$)/);
+    const knowledgePoint = kpMatch ? kpMatch[1].trim() : undefined;
+
+    questions.push({
+      id: `gen-${qNum}`,
+      type,
+      question,
+      options,
+      answer,
+      explanation,
+      difficulty,
+      knowledgePoint,
+    });
+  }
+
+  return {
+    id: `gen-quiz-${Date.now()}`,
+    resourceId: '',
+    title: `${topic} · AI 生成练习`,
+    chapter: topic,
+    questions,
+  };
 }
 
 function QuizPlayer({ quiz }: { quiz: Quiz }) {
