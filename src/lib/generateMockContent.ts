@@ -153,13 +153,13 @@ $$\\theta^* = \\arg\\min_\\theta \\frac{1}{n} \\sum_{i=1}^n \\ell(f_\\theta(x_i)
 
 以 ${topic} 的典型场景为例：
 
-\\`\\`\\`text
+\`\`\`text
 输入: 样本 (x, y)
 模型预测: ŷ = f_θ(x)
 误差: ℓ(ŷ, y) = (ŷ - y)²
 梯度: ∇θ ℓ = 2(ŷ - y) · ∇θ f_θ(x)
 更新: θ ← θ - η · ∇θ ℓ
-\\`\\`\\`
+\`\`\`
 
 ## 四、易错点提示
 
@@ -350,7 +350,7 @@ function generateCode(topic: string, difficulty: string, profile: Profile): stri
 
 ## 一、环境准备
 
-\\`\\`\\`python
+\`\`\`python
 import numpy as np
 import torch
 import torch.nn as nn
@@ -364,11 +364,11 @@ torch.manual_seed(42)
 np.random.seed(42)
 
 print(f"PyTorch 版本: {torch.__version__}")
-\\`\\`\\`
+\`\`\`
 
 ## 二、数据准备
 
-\\`\\`\\`python
+\`\`\`python
 # 生成模拟数据集
 X, y = make_classification(
     n_samples=1000, n_features=20, n_informative=10,
@@ -385,13 +385,13 @@ X_test = torch.FloatTensor(X_test)
 y_test = torch.LongTensor(y_test)
 
 print(f"训练集: {X_train.shape}, 测试集: {X_test.shape}")
-\\`\\`\\`
+\`\`\`
 
 ## 三、模型定义
 
 针对 **${topic}**，构建一个多层感知机：
 
-\\`\\`\\`python
+\`\`\`python
 class ${topic.replace(/[^a-zA-Z0-9]/g, '')}Model(nn.Module):
     """${topic} 示例模型"""
     def __init__(self, input_dim=20, hidden_dim=64, output_dim=2):
@@ -410,11 +410,11 @@ class ${topic.replace(/[^a-zA-Z0-9]/g, '')}Model(nn.Module):
 
 model = ${topic.replace(/[^a-zA-Z0-9]/g, '')}Model()
 print(model)
-\\`\\`\\`
+\`\`\`
 
 ## 四、训练流程
 
-\\`\\`\\`python
+\`\`\`python
 # 损失函数与优化器
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
@@ -448,11 +448,11 @@ for epoch in range(epochs):
               f"Loss: {loss.item():.4f} "
               f"Train Acc: {train_acc:.4f} "
               f"Test Acc: {test_acc:.4f}")
-\\`\\`\\`
+\`\`\`
 
 ## 五、评估与可视化
 
-\\`\\`\\`python
+\`\`\`python
 # 最终评估
 model.eval()
 with torch.no_grad():
@@ -462,20 +462,20 @@ with torch.no_grad():
 
 print(f"\\n最终测试准确率: {final_acc:.4f}")
 print(f"模型参数量: {sum(p.numel() for p in model.parameters()):,}")
-\\`\\`\\`
+\`\`\`
 
 ## 六、关键讲解
 
-1. **数据预处理**：使用 \\`make_classification\\` 生成二分类数据，80/20 划分训练/测试集
+1. **数据预处理**：使用 \`make_classification\` 生成二分类数据，80/20 划分训练/测试集
 2. **模型设计**：MLP + ReLU + Dropout，Dropout 防止过拟合（对应你画像中的易错点 ${profile.errorPattern}/100）
 3. **优化器选择**：Adam + weight_decay，兼顾自适应学习率与 L2 正则
 4. **训练监控**：每 10 轮打印训练/测试准确率，观察是否过拟合
 
 ## 七、进阶练习
 
-- 尝试修改 \\`hidden_dim\\`，观察模型容量对过拟合的影响
-- 将优化器改为 \\`SGD\\` + momentum，对比收敛速度
-- 添加学习率调度器 \\`ReduceLROnPlateau\\`
+- 尝试修改 \`hidden_dim\`，观察模型容量对过拟合的影响
+- 将优化器改为 \`SGD\` + momentum，对比收敛速度
+- 添加学习率调度器 \`ReduceLROnPlateau\`
 `;
 }
 
