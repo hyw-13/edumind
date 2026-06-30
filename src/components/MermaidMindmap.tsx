@@ -60,9 +60,13 @@ function truncate(text: string, maxWidth: number): string {
   return t + '…';
 }
 
-// 净化节点文本
+// 净化节点文本：移除 Markdown 加粗/斜体/代码标记 + 标点符号
 function sanitize(text: string): string {
   return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')   // **加粗** → 加粗
+    .replace(/\*([^*\n]+?)\*/g, '$1')   // *斜体* → 斜体
+    .replace(/`([^`\n]+?)`/g, '$1')     // `代码` → 代码
+    .replace(/__(.+?)__/g, '$1')        // __下划线__ → 下划线
     .replace(/[()[\]{}]/g, '')
     .replace(/[（）【】｛｝]/g, '')
     .replace(/[\/\\:;]/g, ' ')
