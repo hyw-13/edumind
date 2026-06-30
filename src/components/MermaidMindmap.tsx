@@ -271,7 +271,6 @@ export default function MermaidMindmap({ content }: { content: string }) {
           const color = palette[n.branchIndex % palette.length];
           const isRoot = n.depth === 0;
           const isBranch = n.depth === 1;
-          const isTruncated = n.text !== n.fullText;
 
           if (isRoot) {
             return (
@@ -297,7 +296,7 @@ export default function MermaidMindmap({ content }: { content: string }) {
             return (
               <div
                 key={n.id}
-                className="absolute flex items-center justify-center rounded-lg text-white font-medium shadow-soft"
+                className="absolute flex cursor-pointer items-center justify-center rounded-lg text-white font-medium shadow-soft transition-all hover:shadow-lift"
                 style={{
                   left: n.x,
                   top: n.y,
@@ -307,17 +306,19 @@ export default function MermaidMindmap({ content }: { content: string }) {
                   fontSize: 13,
                   zIndex: 2,
                 }}
+                onClick={() => setExpandedNode(n.id)}
+                title="点击查看完整内容"
               >
                 {n.text}
               </div>
             );
           }
 
-          // 叶子 / 深层节点：浅色背景 + 彩色左边框
+          // 叶子 / 深层节点：浅色背景 + 彩色左边框，所有节点可点击查看完整内容
           return (
             <div
               key={n.id}
-              className={`absolute flex items-center rounded-md border bg-white shadow-soft ${isTruncated ? 'cursor-pointer transition-all hover:shadow-lift hover:border-teal/40' : ''}`}
+              className="absolute flex cursor-pointer items-center rounded-md border bg-white shadow-soft transition-all hover:shadow-lift hover:border-teal/40"
               style={{
                 left: n.x,
                 top: n.y,
@@ -330,8 +331,8 @@ export default function MermaidMindmap({ content }: { content: string }) {
                 paddingLeft: 8,
                 zIndex: expandedNode === n.id ? 30 : 2,
               }}
-              onClick={isTruncated ? () => setExpandedNode(n.id) : undefined}
-              title={isTruncated ? '点击查看完整内容' : undefined}
+              onClick={() => setExpandedNode(n.id)}
+              title="点击查看完整内容"
             >
               <span className="truncate">{n.text}</span>
             </div>
