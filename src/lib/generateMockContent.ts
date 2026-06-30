@@ -1,11 +1,52 @@
 // 多智能体协作生成的内容生成器（模拟）
 // 根据资源类型 + 主题 + 学生画像，生成结构化的演示内容
 import type { ResourceType, Profile } from '@/data/mockData';
+import { knowledgeBase, findKnowledgePoint, type KnowledgePoint } from '@/data/knowledgeBase';
 
 const styleLabel = (p: Profile) => {
   const v = Math.round(p.cognitiveStyle / 25);
   return ['未确定', '视频型', '阅读型', '动手型', '推导型'][v] || '混合型';
 };
+
+// 根据主题从知识库中检索最相关的知识点（按标题/摘要/关键术语匹配）
+// 用于在生成 doc/quiz 时用真实知识点内容替换模板，提升内容真实性
+function findKnowledgePointByTopic(topic: string): KnowledgePoint | undefined {
+  const t = topic.trim().toLowerCase();
+  if (!t) return undefined;
+  // 优先：标题完全匹配
+  for (const ch of knowledgeBase) {
+    for (const sec of ch.sections) {
+      for (const pt of sec.points) {
+        if (pt.title.toLowerCase() === t) return pt;
+      }
+    }
+  }
+  // 其次：标题包含匹配
+  for (const ch of knowledgeBase) {
+    for (const sec of ch.sections) {
+      for (const pt of sec.points) {
+        const title = pt.title.toLowerCase();
+        if (title.includes(t) || t.includes(title)) return pt;
+      }
+    }
+  }
+  // 最后：关键术语 / 摘要包含匹配
+  for (const ch of knowledgeBase) {
+    for (const sec of ch.sections) {
+      for (const pt of sec.points) {
+        const terms = (pt.keyTerms || []).join(' ').toLowerCase();
+        if (terms.includes(t) || pt.summary.toLowerCase().includes(t)) return pt;
+      }
+    }
+  }
+  return undefined;
+}
+
+// 截取知识点 detail 的前 N 字作为摘要
+function detailSnippet(pt: KnowledgePoint, max = 800): string {
+  if (!pt.detail) return '';
+  return pt.detail.length > max ? pt.detail.slice(0, max) + '…' : pt.detail;
+}
 
 export function generateMockContent(
   type: ResourceType,
@@ -34,14 +75,45 @@ export function generateMockContent(
 
 // ============ 讲解文档 ============
 function generateDoc(topic: string, difficulty: string, style: string, profile: Profile): string {
-  return `# ${topic} · 个性化讲解文档
+  const kp = findKnowledgePointByTopic(topic);
+  const header = `# ${topic} · 个性化讲解文档
 
 > **生成参数**：难度 ${difficulty} · 认知风格 ${style} · 知识基础 ${profile.knowledgeBase}/100
 > **生成智能体**：总协调 → 画像构建 → 文档生成 → 质量校验
+${kp ? `\n> **数据来源**：课程知识库 · 已匹配真实知识点「${kp.title}」` : ''}
 
 ## 一、概念引入
 
-**${topic}** 是人工智能领域的核心知识点之一。理解 ${topic} 的关键在于把握其背后的动机、数学定义与工程实现。
+`;
+
+  // 命中知识库：用真实知识点内容替换模板
+  if (kp) {
+    const intro = `${kp.summary}
+
+${difficulty === '入门' ? '本节将从直观示例入手，逐步建立概念。' : difficulty === '进阶' ? '本节假设你已具备基础概念，将聚焦于原理推导与对比分析。' : '本节将深入数学推导、工程优化与前沿进展。'}
+
+## 二、核心内容
+
+${detailSnippet(kp, 1200)}
+
+## 三、关键术语
+
+${(kp.keyTerms || []).map((t) => `- **${t}**`).join('\n') || '- 见正文核心定义'}
+
+## 四、学习建议
+
+基于你的画像（知识基础 ${profile.knowledgeBase}/100，易错点偏好 ${profile.errorPattern}/100）：
+1. 先通读「概念引入」建立整体认知
+2. 重点理解「核心内容」中的原理机制与典型应用
+3. 结合代码案例验证理论，注意易错点
+
+> 下一步：完成下方练习题，巩固 ${topic} 相关知识点。
+`;
+    return header + intro;
+  }
+
+  // 未命中知识库：回退到通用模板
+  return header + `**${topic}** 是人工智能领域的核心知识点之一。理解 ${topic} 的关键在于把握其背后的动机、数学定义与工程实现。
 
 ${difficulty === '入门' ? '本节将从直观示例入手，逐步建立概念。' : difficulty === '进阶' ? '本节假设你已具备基础概念，将聚焦于原理推导与对比分析。' : '本节将深入数学推导、工程优化与前沿进展。'}
 
@@ -81,13 +153,13 @@ $$\\theta^* = \\arg\\min_\\theta \\frac{1}{n} \\sum_{i=1}^n \\ell(f_\\theta(x_i)
 
 以 ${topic} 的典型场景为例：
 
-\`\`\`text
+\\`\\`\\`text
 输入: 样本 (x, y)
 模型预测: ŷ = f_θ(x)
 误差: ℓ(ŷ, y) = (ŷ - y)²
 梯度: ∇θ ℓ = 2(ŷ - y) · ∇θ f_θ(x)
 更新: θ ← θ - η · ∇θ ℓ
-\`\`\`
+\\`\\`\\`
 
 ## 四、易错点提示
 
@@ -109,108 +181,143 @@ ${topic} 的核心是**通过数据学习规律**。掌握 ${topic} 需要：
 }
 
 // ============ 思维导图 ============
+// 使用 ## 作为主分支，### 作为子分支，确保 MermaidMindmap 解析时层级完整不丢分支
 function generateMindmap(topic: string, profile: Profile): string {
+  const kp = findKnowledgePointByTopic(topic);
+  const terms = kp && kp.keyTerms && kp.keyTerms.length
+    ? kp.keyTerms.map((t) => `- ${t}`).join('\n')
+    : `- 核心概念\n- 关键定义\n- 典型应用`;
+
   return `# ${topic} 知识思维导图
 
-- ${topic}
-  - 1. 基础概念
-    - 1.1 定义与背景
-    - 1.2 核心术语
-    - 1.3 应用场景
-  - 2. 数学原理
-    - 2.1 形式化定义
-    - 2.2 目标函数
-    - 2.3 优化方法
-      - 2.3.1 梯度下降
-      - 2.3.2 牛顿法
-      - 2.3.3 共轭梯度
-  - 3. 算法实现
-    - 3.1 数据预处理
-    - 3.2 模型构建
-    - 3.3 训练与评估
-  - 4. 对比分析
-    - 4.1 与相关方法对比
-      - 4.1.1 优势
-      - 4.1.2 劣势
-    - 4.2 适用场景
-  - 5. 进阶主题
-    - 5.1 工程优化
-    - 5.2 前沿进展
-    - 5.3 开放问题
-  - 6. 学习路径建议
-    - 6.1 前置知识
-    - 6.2 推荐顺序
-    - 6.3 实践项目
+## 1. 基础概念
+- 定义与背景
+- 核心术语
+- 应用场景
 
-> 知识图谱已生成：8 个核心节点 · 15 条关联边 · 层级深度 4
+## 2. 数学原理
+### 形式化定义
+- 目标函数
+- 假设空间
+### 优化方法
+- 梯度下降
+- 牛顿法
+- 共轭梯度
+
+## 3. 算法实现
+- 数据预处理
+- 模型构建
+- 训练与评估
+
+## 4. 对比分析
+### 与相关方法对比
+- 优势
+- 劣势
+### 适用场景
+- 典型用例
+- 局限条件
+
+## 5. 关键转折点分析
+- 历史里程碑
+- 突破性工作
+- 演进脉络
+- 代表性成果
+
+## 6. 关键术语
+${terms}
+
+## 7. 进阶主题
+- 工程优化
+- 前沿进展
+- 开放问题
+
+## 8. 学习路径建议
+- 前置知识
+- 推荐顺序
+- 实践项目
+
+> 知识图谱已生成：8 个核心分支 · 完整层级结构 · 层级深度 4
 `;
 }
 
 // ============ 练习题库 ============
+// 题目采用结构化 Markdown：题干、选项、答案、解析、知识点均用明确标记，
+// 便于 QuizPlayer 解析与渲染；命中知识库时用真实知识点内容出题
 function generateQuiz(topic: string, difficulty: string, profile: Profile): string {
+  const kp = findKnowledgePointByTopic(topic);
+  const sourceNote = kp
+    ? `> **数据来源**：课程知识库 · 已匹配真实知识点「${kp.title}」`
+    : `> **数据来源**：通用模板（未命中知识库）`;
+  const kpTitle = kp ? kp.title : topic;
+  const kpSummary = kp ? kp.summary : `${topic} 的核心概念与应用`;
+
   return `# ${topic} 练习题库
 
-> **题库参数**：难度 ${difficulty} · 10 道题 · 侧重易错点（${profile.errorPattern}/100）
-> **题型分布**：4 道单选 + 3 道多选 + 3 道判断
+> **题库参数**：难度 ${difficulty} · 5 道题 · 侧重易错点（${profile.errorPattern}/100）
+> **题型分布**：2 道单选 + 2 道判断 + 1 道多选
+${sourceNote}
 
 ---
 
 ## 第 1 题（单选 · ${difficulty}）
 
-**关于 ${topic}，下列说法正确的是：**
+**题干**：关于「${kpTitle}」，下列说法正确的是？
 
-- A. ${topic} 只适用于小规模数据集
-- B. ${topic} 的目标是最小化训练误差
-- C. ${topic} 通过数据学习规律并泛化到新样本 ✓
-- D. ${topic} 不需要任何数学基础
+**选项**：
+- A. ${kpTitle} 仅适用于小规模数据集
+- B. ${kpTitle} 的目标是最小化训练误差
+- C. ${kpSummary}
+- D. ${kpTitle} 不需要任何数学基础
 
 **答案**：C
 
-**解析**：${topic} 的核心是从数据中学习规律，并对未见过的数据保持泛化能力。A 错误（适用于各种规模），B 错误（应最小化泛化误差，而非仅训练误差），D 错误（需要数学基础）。
+**解析**：${kpTitle} 的核心在于${kp ? kp.summary : '从数据中学习规律并泛化到新样本'}。A 错误（适用于各种规模），B 错误（应最小化泛化误差而非仅训练误差），D 错误（需要数学基础）。
 
-**知识点**：${topic} 基本概念
+**知识点**：${kpTitle} 基本概念
 
 ---
 
 ## 第 2 题（单选 · ${difficulty}）
 
-**${topic} 中，正则项 $\\Omega(\\theta)$ 的主要作用是：**
+**题干**：在「${kpTitle}」中，正则化的主要作用是？
 
+**选项**：
 - A. 加速训练收敛
-- B. 防止过拟合 ✓
+- B. 防止过拟合
 - C. 提高模型容量
 - D. 减少参数数量
 
 **答案**：B
 
-**解析**：正则项通过对复杂模型施加惩罚，限制参数幅度，从而降低过拟合风险。它不直接加速收敛（A），不提高模型容量（C），也不减少参数数量（D）。
+**解析**：正则化通过对复杂模型施加惩罚、限制参数幅度，从而降低过拟合风险。它不直接加速收敛（A）、不提高模型容量（C）、也不减少参数数量（D）。
 
-**知识点**：正则化
+**知识点**：正则化与泛化
 
 ---
 
 ## 第 3 题（多选 · ${difficulty}）
 
-**下列哪些是 ${topic} 的关键组成部分？（多选）**
+**题干**：下列哪些是「${kpTitle}」的关键组成部分？（多选）
 
-- A. ✓ 损失函数
-- B. ✓ 优化算法
-- C. ✗ 数据可视化
-- D. ✓ 模型假设空间
+**选项**：
+- A. 损失函数
+- B. 优化算法
+- C. 数据可视化
+- D. 模型假设空间
 
 **答案**：A、B、D
 
-**解析**：${topic} 的核心三要素是假设空间（模型）、损失函数（评估）、优化算法（求解）。数据可视化是辅助分析手段，非核心组成部分。
+**解析**：${kpTitle} 的核心三要素是假设空间（模型）、损失函数（评估）、优化算法（求解）。数据可视化是辅助分析手段，非核心组成部分。
 
-**知识点**：${topic} 组成要素
+**知识点**：${kpTitle} 组成要素
 
 ---
 
 ## 第 4 题（判断 · ${difficulty}）
 
-**${topic} 中，训练误差越低，泛化能力一定越强。**
+**题干**：在「${kpTitle}」中，训练误差越低，泛化能力一定越强。
 
-**答案**：错误 ✗
+**答案**：错误
 
 **解析**：训练误差低不代表泛化能力强。当模型过拟合时，训练误差可以很低，但泛化误差反而很高。需要通过交叉验证、正则化等手段控制泛化能力。
 
@@ -220,9 +327,9 @@ function generateQuiz(topic: string, difficulty: string, profile: Profile): stri
 
 ## 第 5 题（判断 · ${difficulty}）
 
-**学习率越大，${topic} 模型训练收敛越快且效果越好。**
+**题干**：学习率越大，「${kpTitle}」模型训练收敛越快且效果越好。
 
-**答案**：错误 ✗
+**答案**：错误
 
 **解析**：学习率过大会导致梯度下降震荡甚至发散，无法收敛到最优解。学习率需要平衡收敛速度与稳定性，常用策略包括学习率衰减、自适应学习率（Adam 等）。
 
@@ -243,7 +350,7 @@ function generateCode(topic: string, difficulty: string, profile: Profile): stri
 
 ## 一、环境准备
 
-\`\`\`python
+\\`\\`\\`python
 import numpy as np
 import torch
 import torch.nn as nn
@@ -257,11 +364,11 @@ torch.manual_seed(42)
 np.random.seed(42)
 
 print(f"PyTorch 版本: {torch.__version__}")
-\`\`\`
+\\`\\`\\`
 
 ## 二、数据准备
 
-\`\`\`python
+\\`\\`\\`python
 # 生成模拟数据集
 X, y = make_classification(
     n_samples=1000, n_features=20, n_informative=10,
@@ -278,13 +385,13 @@ X_test = torch.FloatTensor(X_test)
 y_test = torch.LongTensor(y_test)
 
 print(f"训练集: {X_train.shape}, 测试集: {X_test.shape}")
-\`\`\`
+\\`\\`\\`
 
 ## 三、模型定义
 
 针对 **${topic}**，构建一个多层感知机：
 
-\`\`\`python
+\\`\\`\\`python
 class ${topic.replace(/[^a-zA-Z0-9]/g, '')}Model(nn.Module):
     """${topic} 示例模型"""
     def __init__(self, input_dim=20, hidden_dim=64, output_dim=2):
@@ -303,11 +410,11 @@ class ${topic.replace(/[^a-zA-Z0-9]/g, '')}Model(nn.Module):
 
 model = ${topic.replace(/[^a-zA-Z0-9]/g, '')}Model()
 print(model)
-\`\`\`
+\\`\\`\\`
 
 ## 四、训练流程
 
-\`\`\`python
+\\`\\`\\`python
 # 损失函数与优化器
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
@@ -341,11 +448,11 @@ for epoch in range(epochs):
               f"Loss: {loss.item():.4f} "
               f"Train Acc: {train_acc:.4f} "
               f"Test Acc: {test_acc:.4f}")
-\`\`\`
+\\`\\`\\`
 
 ## 五、评估与可视化
 
-\`\`\`python
+\\`\\`\\`python
 # 最终评估
 model.eval()
 with torch.no_grad():
@@ -355,20 +462,20 @@ with torch.no_grad():
 
 print(f"\\n最终测试准确率: {final_acc:.4f}")
 print(f"模型参数量: {sum(p.numel() for p in model.parameters()):,}")
-\`\`\`
+\\`\\`\\`
 
 ## 六、关键讲解
 
-1. **数据预处理**：使用 \`make_classification\` 生成二分类数据，80/20 划分训练/测试集
+1. **数据预处理**：使用 \\`make_classification\\` 生成二分类数据，80/20 划分训练/测试集
 2. **模型设计**：MLP + ReLU + Dropout，Dropout 防止过拟合（对应你画像中的易错点 ${profile.errorPattern}/100）
 3. **优化器选择**：Adam + weight_decay，兼顾自适应学习率与 L2 正则
 4. **训练监控**：每 10 轮打印训练/测试准确率，观察是否过拟合
 
 ## 七、进阶练习
 
-- 尝试修改 \`hidden_dim\`，观察模型容量对过拟合的影响
-- 将优化器改为 \`SGD\` + momentum，对比收敛速度
-- 添加学习率调度器 \`ReduceLROnPlateau\`
+- 尝试修改 \\`hidden_dim\\`，观察模型容量对过拟合的影响
+- 将优化器改为 \\`SGD\\` + momentum，对比收敛速度
+- 添加学习率调度器 \\`ReduceLROnPlateau\\`
 `;
 }
 
