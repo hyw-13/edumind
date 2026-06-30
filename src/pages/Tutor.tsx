@@ -1,18 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Send, MessageCircleQuestion, Sparkles, ImageIcon, Play, Lightbulb } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Send, MessageCircleQuestion, Sparkles, ImageIcon, Play, Lightbulb, ChevronRight } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import {
   initialTutorMessages, tutorSuggestions, tutorReplyMap,
+  resources, resourceTypeMeta,
   type ChatMessage,
 } from '@/data/mockData';
 import { findKnowledgePoint } from '@/data/knowledgeBase';
 import { recommend } from '@/lib/recommender';
 import { useStore } from '@/store/useStore';
+import Icon from '@/components/Icon';
 import { cn } from '@/lib/utils';
 
 interface Msg extends ChatMessage {
   streaming?: boolean;
+  resourceIds?: string[];
 }
 
 // AI 课程相关关键词（用于判断问题是否在答疑范围内）
@@ -55,11 +58,12 @@ const apologyReply = `抱歉，我目前无法就这个问题给出有效回答�
 
 // 基于知识库检索生成回复（RAG）：当问题不在预设回复中时调用
 // 若检索结果为空（total === 0）返回 null，由调用方回退到 apologyReply（防幻觉）
-function generateKnowledgeReply(text: string): string | null {
+function generateKnowledgeReply(text: string): { reply: string; resourceIds: string[] } | null {
   const result = recommend(text);
   if (result.total === 0) return null;
 
   const sections: string[] = [];
+  const resourceIds: string[] = [];
 
   // ===== 知识检索 =====
   let kbBody = '## 知识检索\n\n';
@@ -90,13 +94,15 @@ function generateKnowledgeReply(text: string): string | null {
   }
   sections.push(kbBody);
 
-  // ===== 推荐资源 =====
+  // ===== 推荐资源（纯文本列表，点击下方卡片跳转） =====
   if (result.resources.length > 0) {
+    const top3 = result.resources.slice(0, 3);
+    top3.forEach((r) => resourceIds.push(r.id));
     let resBody = '## 推荐资源\n\n';
-    result.resources.slice(0, 3).forEach((r, i) => {
-      resBody += `${i + 1}. [${r.title}](${r.link}) — ${r.summary}\n`;
+    top3.forEach((r, i) => {
+      resBody += `${i + 1}. **${r.title}** — ${r.summary}\n`;
     });
-    resBody += '\n';
+    resBody += '\n> 点击下方资源卡片可直接跳转查看完整内容\n\n';
     sections.push(resBody);
   }
 
@@ -121,7 +127,7 @@ function generateKnowledgeReply(text: string): string | null {
   adviceBody += advice.map((a, i) => `${i + 1}. ${a}`).join('\n') + '\n';
   sections.push(adviceBody);
 
-  return sections.join('\n');
+  return { reply: sections.join('\n'), resourceIds };
 }
 
 export default function Tutor() {
@@ -131,6 +137,7 @@ export default function Tutor() {
   const [streamText, setStreamText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const pendingRef = useRef<string | null>(null);
   const recordTutorQuestion = useStore((s) => s.recordTutorQuestion);
 
@@ -152,9 +159,15 @@ export default function Tutor() {
     // 当问题在预设回复中时直接使用；否则接入知识库检索（RAG），
     // 检索为空（total === 0）时回退到 apologyReply（防幻觉）
     let reply = tutorReplyMap[text];
+    let replyResourceIds: string[] | undefined;
     if (!reply) {
       const kbReply = generateKnowledgeReply(text);
-      reply = kbReply ?? apologyReply;
+      if (kbReply) {
+        reply = kbReply.reply;
+        replyResourceIds = kbReply.resourceIds.length > 0 ? kbReply.resourceIds : undefined;
+      } else {
+        reply = apologyReply;
+      }
     }
 
     let pos = 0;
@@ -167,6 +180,7 @@ export default function Tutor() {
         setMessages((m) => [...m, {
           id: `a-${Date.now()}`, role: 'assistant', content: reply, timestamp: now(),
           modalities: ['text', 'diagram'],
+          resourceIds: replyResourceIds,
         }]);
         setStreamText('');
         setStreaming(false);
@@ -231,6 +245,32 @@ export default function Tutor() {
                   <button className="flex items-center gap-1 rounded-md bg-rose-pale/50 px-2 py-1 text-[10px] font-medium text-rose transition-all hover:bg-rose hover:text-white">
                     <Play size={11} /> 生成短视频
                   </button>
+                </div>
+              )}
+              {/* 推荐资源卡片：点击跳转到资源中心对应资源 */}
+              {m.role === 'assistant' && m.resourceIds && m.resourceIds.length > 0 && (
+                <div className="mt-2 space-y-1.5">
+                  {m.resourceIds.map((rid) => {
+                    const res = resources.find((r) => r.id === rid);
+                    if (!res) return null;
+                    const meta = resourceTypeMeta[res.type];
+                    return (
+                      <button
+                        key={rid}
+                        onClick={() => navigate(`/resources?open=${rid}`)}
+                        className="flex w-full items-center gap-2.5 rounded-lg border border-line bg-white px-3 py-2 text-left transition-all hover:border-teal/40 hover:shadow-soft"
+                      >
+                        <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-md', meta.bg)}>
+                          <Icon name={meta.icon} size={13} className={meta.color} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-medium text-ink">{res.title}</div>
+                          <div className="truncate text-[10px] text-ink-muted">{res.chapter}</div>
+                        </div>
+                        <ChevronRight size={14} className="shrink-0 text-ink-faint" />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
               <div className={cn('mt-1 text-[10px] text-ink-faint', m.role === 'user' ? 'text-right' : '')}>{m.timestamp}</div>
