@@ -1,6 +1,6 @@
 // 真实思维导图渲染组件（自定义布局，匹配项目设计语言）
 // 将 Markdown 列表树解析为水平树形布局，SVG 绘制曲线连接 + HTML 节点
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface MindmapNode {
   text: string;
@@ -10,6 +10,7 @@ interface MindmapNode {
 interface LaidOutNode {
   id: number;
   text: string;
+  fullText: string;
   depth: number;
   x: number;
   y: number;
@@ -197,13 +198,13 @@ function layoutTree(root: MindmapNode): {
     if (node.children.length === 0) {
       const y = PADDING + leafIndex * ROW_HEIGHT;
       leafIndex++;
-      const n: LaidOutNode = { id, text: truncate(node.text, width), depth, x, y, width, height: NODE_HEIGHT, branchIndex, children: [] };
+      const n: LaidOutNode = { id, text: truncate(node.text, width), fullText: node.text, depth, x, y, width, height: NODE_HEIGHT, branchIndex, children: [] };
       allNodes.push(n);
       return n;
     }
     const children = node.children.map((c, i) => layout(c, depth + 1, depth === 0 ? i : branchIndex));
     const y = children.reduce((s, c) => s + c.y, 0) / children.length;
-    const n: LaidOutNode = { id, text: truncate(node.text, width), depth, x, y, width, height: NODE_HEIGHT, branchIndex, children };
+    const n: LaidOutNode = { id, text: truncate(node.text, width), fullText: node.text, depth, x, y, width, height: NODE_HEIGHT, branchIndex, children };
     allNodes.push(n);
     for (const c of children) edges.push({ from: n, to: c });
     return n;
@@ -231,12 +232,14 @@ export default function MermaidMindmap({ content }: { content: string }) {
     const r = parseMarkdownTree(content);
     return { root: r, layout: r ? layoutTree(r) : null };
   }, [content]);
+  const [expandedNode, setExpandedNode] = useState<number | null>(null);
 
   if (!root || !layout) {
     return <div className="py-4 text-sm text-rose">⚠ 无法解析思维导图结构</div>;
   }
 
   const { nodes, edges, width, height } = layout;
+  const expanded = expandedNode !== null ? nodes.find((n) => n.id === expandedNode) : null;
 
   return (
     <div className="overflow-x-auto">
@@ -268,6 +271,7 @@ export default function MermaidMindmap({ content }: { content: string }) {
           const color = palette[n.branchIndex % palette.length];
           const isRoot = n.depth === 0;
           const isBranch = n.depth === 1;
+          const isTruncated = n.text !== n.fullText;
 
           if (isRoot) {
             return (
@@ -313,7 +317,7 @@ export default function MermaidMindmap({ content }: { content: string }) {
           return (
             <div
               key={n.id}
-              className="absolute flex items-center rounded-md border bg-white shadow-soft"
+              className={`absolute flex items-center rounded-md border bg-white shadow-soft ${isTruncated ? 'cursor-pointer transition-all hover:shadow-lift hover:border-teal/40' : ''}`}
               style={{
                 left: n.x,
                 top: n.y,
@@ -324,14 +328,42 @@ export default function MermaidMindmap({ content }: { content: string }) {
                 color: color.lightText,
                 fontSize: 12,
                 paddingLeft: 8,
-                zIndex: 2,
+                zIndex: expandedNode === n.id ? 30 : 2,
               }}
+              onClick={isTruncated ? () => setExpandedNode(n.id) : undefined}
+              title={isTruncated ? '点击查看完整内容' : undefined}
             >
               <span className="truncate">{n.text}</span>
             </div>
           );
         })}
       </div>
+
+      {/* 展开浮层：显示被截断节点的完整文本 */}
+      {expanded && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setExpandedNode(null)}
+          />
+          <div
+            className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,420px)] -translate-x-1/2 -translate-y-1/2 animate-fade-up rounded-2xl border border-line bg-white p-5 shadow-lift"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium text-teal">
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: palette[expanded.branchIndex % palette.length].main }} />
+              完整内容
+            </div>
+            <p className="text-sm leading-relaxed text-ink">{expanded.fullText}</p>
+            <button
+              onClick={() => setExpandedNode(null)}
+              className="mt-4 w-full rounded-lg bg-paper-soft py-2 text-xs font-medium text-ink-soft transition-all hover:bg-paper-deep"
+            >
+              关闭
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
