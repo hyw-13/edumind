@@ -20,7 +20,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   '/': { title: '智学伴', subtitle: '对话式学习推荐 · 自动构建画像 · 画像随学随新' },
   '/dashboard': { title: '学习仪表盘', subtitle: '你的个性化学习总览' },
   '/agents': { title: '多智能体协作', subtitle: '8 智能体协同 · LangGraph 编排 · 讯飞星火驱动' },
-  '/knowledge': { title: '知识库', subtitle: '人工智能导论 · 8 大章节结构化知识体系' },
+  '/knowledge': { title: '知识库', subtitle: '人工智能导论 · 10 大章节结构化知识体系' },
   '/resources': { title: '资源中心', subtitle: '多智能体协同生成的个性化学习资源' },
   '/path': { title: '学习路径', subtitle: '基于知识图谱的动态学习规划' },
   '/tutor': { title: '智能答疑', subtitle: '即时多模态答疑辅导' },
