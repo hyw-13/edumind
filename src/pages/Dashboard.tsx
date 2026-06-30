@@ -41,6 +41,7 @@ export default function Dashboard() {
   // 最近学习：基于已学资源 + 默认数据混合
   const recentLearned = learnedResources.slice(0, 4).map((r, idx) => ({
     id: `recent-${r.resourceId}`,
+    resourceId: r.resourceId,
     type: r.type,
     title: r.title,
     chapter: r.chapter,
@@ -121,14 +122,20 @@ export default function Dashboard() {
       <section className="mt-6">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">最近学习</h2>
-          <span className="text-xs text-ink-muted">继续上次的学习</span>
+          {learnedResources.length > 0 ? (
+            <Link to={`/resources?open=${learnedResources[0].resourceId}`} className="flex items-center gap-1 text-xs font-medium text-teal hover:gap-2 transition-all">
+              继续上次的学习 <ArrowRight size={13} />
+            </Link>
+          ) : (
+            <span className="text-xs text-ink-muted">继续上次的学习</span>
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {displayRecent.map((item, idx) => {
             const meta = resourceTypeMeta[item.type as ResourceType];
             return (
               <Link
-                to="/resources"
+                to={item.resourceId ? `/resources?open=${item.resourceId}` : '/resources'}
                 key={item.id}
                 className="card group p-5 transition-all hover:-translate-y-1 hover:shadow-lift animate-fade-up"
                 style={{ animationDelay: `${idx * 70}ms` }}
@@ -166,7 +173,7 @@ export default function Dashboard() {
 }
 
 // 静态回退数据（最近学习不足时补充）
-const learningOverviewFallback = [
+const learningOverviewFallback: { id: string; resourceId?: string; type: ResourceType; title: string; chapter: string; progress: number; updatedAt: string }[] = [
   { id: 'fb1', type: 'doc' as const, title: '人工智能三大流派解析', chapter: '基础概念 · 三大流派', progress: 0, updatedAt: '未开始' },
   { id: 'fb2', type: 'mindmap' as const, title: 'AI 70 年发展史时间线', chapter: '发展历史 · 全景', progress: 0, updatedAt: '未开始' },
   { id: 'fb3', type: 'quiz' as const, title: 'A* 搜索算法专项练习', chapter: '核心技术 · 搜索技术', progress: 0, updatedAt: '未开始' },
