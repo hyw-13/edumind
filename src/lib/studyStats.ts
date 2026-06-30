@@ -77,7 +77,15 @@ export function computeOverallMastery(
   return Math.min(100, Math.round(completionRatio * 40 + accuracyRatio * 30 + knowledgeRatio * 30));
 }
 
-// 学习健康度：节奏稳定 + 不过度疲劳
+// 24小时内连续学习项数（资源 + 知识库，每24小时自动重置）
+export function computeDailyLearnedCount(activities: StudyActivity[]): number {
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  return activities.filter(
+    (a) => (a.type === 'resource' || a.type === 'knowledge') && a.timestamp >= oneDayAgo
+  ).length;
+}
+
+// 学习健康度：<10 项时随学习数增长，>10 项时下降，最低 10
 export function computeHealthScore(
   activities: StudyActivity[],
   learnedCount: number
@@ -90,16 +98,20 @@ export function computeHealthScore(
   // 答题活动加成（每次 +2，上限 +10）
   const quizCount = activities.filter((a) => a.type === 'quiz').length;
   score += Math.min(10, quizCount * 2);
-  // 连续学习 10 个以上时学习健康度下降（含资源 + 知识库学习）
-  const knowledgeCount = activities.filter((a) => a.type === 'knowledge').length;
-  const totalLearned = learnedCount + knowledgeCount;
-  if (totalLearned > 10) {
-    score -= (totalLearned - 10) * 4;
+  // 24小时内连续学习项数（每24小时自动重置）
+  const dailyLearned = computeDailyLearnedCount(activities);
+  if (dailyLearned <= 10) {
+    // <10 项时随学习数增长，每项 +3，上限 +30
+    score += dailyLearned * 3;
+  } else {
+    // >10 项时下降，超过部分每项 -5，最低 10
+    score += 30 - (dailyLearned - 10) * 5;
   }
-  return Math.max(40, Math.min(99, score));
+  return Math.max(10, Math.min(99, score));
 }
 
 // 掌握度变化趋势：基于最近 7 天的学习活动生成 7 个数据点
+// 起始值为 7 天前的累计掌握度（回溯计算），每日增量与当天实际活动对应
 export function computeMasteryTrend(
   activities: StudyActivity[],
   quizResults: QuizResult[],
@@ -110,60 +122,98 @@ export function computeMasteryTrend(
   const today = new Date();
   const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
+  // 计算 7 天前已完成的累计增量（用于确定起始值）
+  const sevenDaysAgoDate = new Date(today);
+  sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 7);
+  const sevenDaysAgoStr = localDateStr(sevenDaysAgoDate);
+  const priorActivities = activities.filter((a) => a.date < sevenDaysAgoStr);
+  const priorDelta = priorActivities.reduce((sum, a) => {
+    if (a.type === 'resource') return sum + 3;
+    if (a.type === 'quiz') return sum + 3;
+    if (a.type === 'knowledge') return sum + 1;
+    if (a.type === 'tutor') return sum + 1;
+    return sum;
+  }, 0);
+  const priorQuizDelta = quizResults
+    .filter((q) => q.date < sevenDaysAgoStr)
+    .reduce((sum, q) => sum + Math.round(q.rate * 5), 0);
+  // 起始值 = 基础值 + 7天前的累计增量
+  const startValue = Math.min(95, baseMastery + priorDelta + priorQuizDelta);
+
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const dateStr = localDateStr(date);
     labels.push(dayLabels[date.getDay()]);
 
-    // 当天学习活动加成
+    // 当天学习活动加成（与 markResourceLearned/recordKnowledgeStudy 中的掌握度增量一致）
     const dayActivities = activities.filter((a) => a.date === dateStr);
     const dayQuiz = quizResults.filter((q) => q.date === dateStr);
     let dailyDelta = 0;
     dayActivities.forEach((a) => {
-      if (a.type === 'resource') dailyDelta += 2;
-      else if (a.type === 'quiz') dailyDelta += 3;
-      else if (a.type === 'tutor') dailyDelta += 1;
-      else if (a.type === 'knowledge') dailyDelta += 1; // 知识库学习：一点掌握度
+      if (a.type === 'resource') dailyDelta += 3;       // 资源学习：+3 掌握度
+      else if (a.type === 'quiz') dailyDelta += 3;       // 答题练习：+3 掌握度
+      else if (a.type === 'tutor') dailyDelta += 1;      // 智能答疑：+1
+      else if (a.type === 'knowledge') dailyDelta += 1;  // 知识库学习：+1
     });
     dayQuiz.forEach((q) => {
       dailyDelta += Math.round(q.rate * 5);
     });
     // 累计：前一天的值 + 当天增量
-    const prev = values.length > 0 ? values[values.length - 1] : baseMastery;
+    const prev = values.length > 0 ? values[values.length - 1] : startValue;
     values.push(Math.min(100, prev + dailyDelta));
   }
   return { labels, values };
 }
 
-// 多个知识点的掌握度趋势（按章节分组）
+// 多个知识点的掌握度趋势（按活动类型分组）
 // 支持按活动类型过滤（type）和自定义起始值（baseValue）
 export function computeTopicTrends(
   activities: StudyActivity[],
   quizResults: QuizResult[],
-  topics: { topic: string; keywords: string[]; type?: StudyActivity['type']; baseValue?: number }[]
+  topics: { topic: string; type?: StudyActivity['type']; baseValue?: number }[]
 ): { topic: string; values: number[] }[] {
   return topics.map((t) => {
-    // 按类型过滤（如知识库学习）或按关键词过滤
+    // 按类型过滤活动（type 为空时取所有活动）
     const relevantActivities = t.type
       ? activities.filter((a) => a.type === t.type)
-      : t.keywords.length === 0
-        ? activities // 空关键词 = 所有活动
-        : activities.filter((a) => t.keywords.some((kw) => a.title.includes(kw)));
-    const relevantQuiz = quizResults.filter((q) =>
-      t.keywords.some((kw) => q.chapter.includes(kw))
-    );
-    // 使用自定义起始值或默认计算
-    const base = t.baseValue ?? (30 + relevantActivities.length * 5 + relevantQuiz.length * 8);
-    const values: number[] = [];
+      : activities;
+    const relevantQuiz = t.type === 'quiz' ? quizResults : [];
+
+    // 计算 7 天前已完成的累计增量（用于确定起始值）
     const today = new Date();
-    let prev = Math.min(95, base);
+    const sevenDaysAgoDate = new Date(today);
+    sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 7);
+    const sevenDaysAgoStr = localDateStr(sevenDaysAgoDate);
+    const priorCount = relevantActivities.filter((a) => a.date < sevenDaysAgoStr).length;
+    const priorQuizDelta = relevantQuiz
+      .filter((q) => q.date < sevenDaysAgoStr)
+      .reduce((sum, q) => sum + Math.round(q.rate * 5), 0);
+
+    // 起始值 = 自定义值 或 基于历史活动数计算
+    const base = t.baseValue ?? Math.min(80, 15 + priorCount * 4 + priorQuizDelta);
+    const values: number[] = [];
+    let prev = base;
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = localDateStr(date);
-      const dayCount = relevantActivities.filter((a) => a.date === dateStr).length;
-      prev = Math.min(100, prev + dayCount * 3);
+      const dayActivities = relevantActivities.filter((a) => a.date === dateStr);
+      // 增量与活动类型对应
+      let delta = 0;
+      dayActivities.forEach((a) => {
+        if (a.type === 'resource') delta += 3;
+        else if (a.type === 'quiz') delta += 3;
+        else if (a.type === 'tutor') delta += 2;
+        else if (a.type === 'knowledge') delta += 1;
+        else delta += 2;
+      });
+      // 答题正确率加成
+      if (t.type === 'quiz') {
+        const dayQuiz = relevantQuiz.filter((q) => q.date === dateStr);
+        delta += dayQuiz.reduce((s, q) => s + Math.round(q.rate * 5), 0);
+      }
+      prev = Math.min(100, prev + delta);
       values.push(prev);
     }
     return { topic: t.topic, values };
