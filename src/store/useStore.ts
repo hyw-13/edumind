@@ -233,8 +233,8 @@ export const useStore = create<AppState>()(
         ...s.studyActivities,
       ],
     }));
-    // 根据资源类型更新画像维度
-    const delta: Partial<Profile> = { knowledgeBase: state.profile.knowledgeBase + 4 };
+    // 根据资源类型更新画像维度（单个资源掌握度 +3）
+    const delta: Partial<Profile> = { knowledgeBase: state.profile.knowledgeBase + 3 };
     let reason = `标记学习《${resource.title}》`;
     if (resource.type === 'code') {
       delta.cognitiveStyle = state.profile.cognitiveStyle + 4;
@@ -242,7 +242,7 @@ export const useStore = create<AppState>()(
       reason += '，代码实战';
     } else if (resource.type === 'quiz') {
       delta.errorPattern = state.profile.errorPattern - 2;
-      delta.knowledgeBase = state.profile.knowledgeBase + 5;
+      delta.knowledgeBase = state.profile.knowledgeBase + 3;
       reason += '，巩固错题';
     } else if (resource.type === 'mindmap') {
       delta.cognitiveStyle = state.profile.cognitiveStyle + 3;
