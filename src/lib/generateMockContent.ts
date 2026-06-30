@@ -182,13 +182,16 @@ ${topic} 的核心是**通过数据学习规律**。掌握 ${topic} 需要：
 
 // ============ 思维导图 ============
 // 使用 ## 作为主分支，### 作为子分支，确保 MermaidMindmap 解析时层级完整不丢分支
+// 命中知识库时基于 kp 的 summary/detail/keyTerms 生成真实分支内容，避免空泛模板
 function generateMindmap(topic: string, profile: Profile): string {
   const kp = findKnowledgePointByTopic(topic);
   const terms = kp && kp.keyTerms && kp.keyTerms.length
     ? kp.keyTerms.map((t) => `- ${t}`).join('\n')
     : `- 核心概念\n- 关键定义\n- 典型应用`;
 
-  return `# ${topic} 知识思维导图
+  // 未命中知识库：保留通用模板
+  if (!kp) {
+    return `# ${topic} 知识思维导图
 
 ## 1. 基础概念
 - 定义与背景
@@ -238,6 +241,132 @@ ${terms}
 
 > 知识图谱已生成：8 个核心分支 · 完整层级结构 · 层级深度 4
 `;
+  }
+
+  // ===== 命中知识库：基于 kp 内容生成充实的思维导图 =====
+  const detail = kp.detail || '';
+
+  // 提取 detail 中 **标签**：内容 段落
+  // 用 [^*] 避免跨段匹配，非贪婪到下一个 **xxx** 或段末
+  const sections: { label: string; content: string }[] = [];
+  const sectionRe = /\*\*([^*\n]{2,16})\*\*[：:]\s*([\s\S]*?)(?=\n\s*\*\*[^*\n]{2,16}\*\*[：:]|$)/g;
+  let m: RegExpExecArray | null;
+  while ((m = sectionRe.exec(detail)) !== null) {
+    sections.push({ label: m[1].trim(), content: m[2].trim() });
+  }
+
+  // 从 content 中提取关键短语作为子节点
+  const extractPhrases = (content: string, max = 5): string[] => {
+    if (!content) return [];
+    // 取第一段（在双换行前）
+    const firstPara = content.split(/\n\n/)[0];
+    // 移除列表符号、表格、Markdown 加粗等
+    const clean = firstPara
+      .replace(/^\s*[-+*]\s+/gm, '')
+      .replace(/^\s*\d+[.、)]\s+/gm, '')
+      .replace(/^\s*\|.+\|$/gm, ' ')
+      .replace(/\|/g, ' ')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // 按标点拆分为关键短语
+    const parts = clean
+      .split(/[、，,；;。.!！？?]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2 && s.length <= 36);
+    // 去重
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const p of parts) {
+      if (!seen.has(p)) {
+        seen.add(p);
+        unique.push(p);
+      }
+      if (unique.length >= max) break;
+    }
+    return unique;
+  };
+
+  // 按关键词匹配段落
+  const findSec = (kws: string[]) =>
+    sections.find((s) => kws.some((k) => s.label.includes(k)));
+
+  const defSec = findSec(['定义', '背景', '概念']);
+  const mechanismSec = findSec(['原理', '机制']);
+  const appSec = findSec(['典型应用', '应用', '例子', '应用与例子']);
+  const compareSec = findSec(['对比', '要点', '区别', '比较']);
+  const summarySec = findSec(['小结', '总结', '要点']);
+  const exampleSec = findSec(['典型例子', '例子', '案例']);
+
+  const defPhrases = defSec ? extractPhrases(defSec.content, 4) : [kp.summary];
+  const mechanismPhrases = mechanismSec ? extractPhrases(mechanismSec.content, 5) : [];
+  const appPhrases = [...(appSec ? extractPhrases(appSec.content, 5) : []), ...(exampleSec ? extractPhrases(exampleSec.content, 3) : [])];
+  const comparePhrases = compareSec ? extractPhrases(compareSec.content, 5) : [];
+  const summaryPhrases = summarySec ? extractPhrases(summarySec.content, 3) : [kp.summary];
+
+  const lines: string[] = [];
+  lines.push(`# ${kp.title} 知识思维导图`);
+  lines.push('');
+
+  // 1. 核心定义
+  lines.push('## 1. 核心定义');
+  defPhrases.forEach((p) => lines.push(`- ${p}`));
+  lines.push('');
+
+  // 2. 原理机制
+  lines.push('## 2. 原理机制');
+  if (mechanismPhrases.length > 0) {
+    mechanismPhrases.forEach((p) => lines.push(`- ${p}`));
+  } else {
+    lines.push(`- ${kp.summary}`);
+    lines.push('- 核心机制与工作流程');
+  }
+  lines.push('');
+
+  // 3. 典型应用
+  lines.push('## 3. 典型应用');
+  if (appPhrases.length > 0) {
+    appPhrases.slice(0, 6).forEach((p) => lines.push(`- ${p}`));
+  } else {
+    lines.push('- 实际工程场景');
+    lines.push('- 学术研究案例');
+  }
+  lines.push('');
+
+  // 4. 要点对比
+  lines.push('## 4. 要点对比');
+  if (comparePhrases.length > 0) {
+    comparePhrases.forEach((p) => lines.push(`- ${p}`));
+  } else {
+    lines.push('- 优势');
+    lines.push('- 局限');
+    lines.push('- 适用边界');
+  }
+  lines.push('');
+
+  // 5. 关键术语
+  lines.push('## 5. 关键术语');
+  if (kp.keyTerms && kp.keyTerms.length > 0) {
+    kp.keyTerms.forEach((t) => lines.push(`- ${t}`));
+  } else {
+    lines.push(`- ${kp.title}`);
+  }
+  lines.push('');
+
+  // 6. 学习小结
+  lines.push('## 6. 学习小结');
+  summaryPhrases.forEach((p) => lines.push(`- ${p}`));
+  lines.push('');
+
+  // 7. 学习路径建议
+  lines.push('## 7. 学习路径建议');
+  lines.push('- 前置知识');
+  lines.push('- 推荐顺序');
+  lines.push('- 实践项目');
+  lines.push('');
+
+  return lines.join('\n');
 }
 
 // ============ 练习题库 ============
