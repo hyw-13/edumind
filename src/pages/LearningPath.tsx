@@ -57,7 +57,7 @@ function computeDynamicNodes(
   });
 }
 
-// 分层布局坐标（7 阶段从左到右，覆盖知识库 8 大章节 16 节点）
+// 分层布局坐标（7 阶段从左到右，覆盖知识库 10 大章节 16 节点）
 const positions: Record<string, { x: number; y: number }> = {
   // 阶段 1：基础准备
   n1:  { x: 80,   y: 165 },
