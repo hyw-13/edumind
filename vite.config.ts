@@ -8,6 +8,12 @@ export default defineConfig({
   base: './',
   build: {
     sourcemap: 'hidden',
+    rollupOptions: {
+      output: {
+        format: 'iife',
+        inlineDynamicImports: true,
+      },
+    },
   },
   resolve: {
     alias: {
@@ -22,6 +28,12 @@ export default defineConfig({
         ],
       },
     }),
-    tsconfigPaths()
+    tsconfigPaths(),
+    {
+      name: 'remove-type-module',
+      transformIndexHtml(html) {
+        return html.replace(/<script type="module"/g, '<script');
+      },
+    },
   ],
 })
