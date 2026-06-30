@@ -475,7 +475,10 @@ function parseGeneratedQuiz(content: string, topic: string): Quiz {
     let question = questionMatch ? questionMatch[1].trim() : '';
     // 移除可能残留的 ** 加粗标记
     question = question.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*/g, '').trim();
-    if (!question) question = `${topic} 相关问题 ${qNum}`;
+    // 防止解析到占位符“题干”或无内容时显示异常
+    if (!question || question === '题干' || question === '题目' || question.length < 2) {
+      question = `${topic} 相关问题 ${qNum}`;
+    }
 
     // 选项：- A. xxx / - A、xxx / - A) xxx
     const options: string[] = [];

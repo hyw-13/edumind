@@ -21,13 +21,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    react({
-      babel: {
-        plugins: [
-          'react-dev-locator',
-        ],
-      },
-    }),
+    react(),
     tsconfigPaths(),
     {
       name: 'inline-assets-for-file',
@@ -36,7 +30,7 @@ export default defineConfig({
         handler(html, ctx) {
           if (!ctx.bundle) return html;
           // 内联 CSS 到 <head>
-          const cssRe = /<link rel="stylesheet" crossorigin href="([^"]+)">/g;
+          const cssRe = /<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g;
           html = html.replace(cssRe, (match, href) => {
             const fileName = href.replace(/^\.\//, '');
             const chunk = Object.values(ctx.bundle).find((c: any) => c.fileName === fileName);
@@ -45,20 +39,34 @@ export default defineConfig({
             }
             return match;
           });
-          // 内联 JS，但放到 </body> 前并加 defer，确保 DOM 就绪
-          const scriptRe = /<script type="module" crossorigin src="([^"]+)"><\/script>/g;
+          // 内联 JS，放到 </body> 前（不 defer，inline defer 非标准且 file:// 下行为不稳定）
+          const scriptRe = /<script[^>]*src="([^"]+)"[^>]*><\/script>/g;
           let inlineScript = '';
           html = html.replace(scriptRe, (match, src) => {
             const fileName = src.replace(/^\.\//, '');
             const chunk = Object.values(ctx.bundle).find((c: any) => c.fileName === fileName);
             if (chunk && 'code' in chunk) {
-              inlineScript = `<script defer>\n${chunk.code}\n</script>`;
+              // 将内联脚本中可能破坏 HTML 解析的结束标签进行转义
+              const safeCode = chunk.code
+                .replace(/<\/script>/gi, '<\\/script>')
+                .replace(/<\/body>/gi, '<\\/body>');
+              inlineScript = `<script>\n${safeCode}\n</script>`;
               return '';
             }
             return match;
           });
           if (inlineScript) {
-            html = html.replace(/<\/body>/, `${inlineScript}\n</body>`);
+            // 使用替换函数，避免 inlineScript 中的 $&/$`/$'/$n 被当作特殊替换模式解析
+            html = html.replace(/<\/body>/, () => `${inlineScript}\n</body>`);
+          }
+          // 若仍有外部资源引用，构建失败以便及时发现
+          const remaining = [
+            ...html.matchAll(/<script[^>]*src="([^"]+)"[^>]*>/g),
+            ...html.matchAll(/<link[^>]*href="(\.\/assets\/[^"]+)"[^>]*>/g),
+          ];
+          if (remaining.length > 0) {
+            const refs = remaining.map(m => m[1]).join(', ');
+            throw new Error(`[inline-assets-for-file] 仍有未内联的外部资源引用：${refs}`);
           }
           return html;
         },

@@ -48,6 +48,15 @@ function detailSnippet(pt: KnowledgePoint, max = 800): string {
   return pt.detail.length > max ? pt.detail.slice(0, max) + '…' : pt.detail;
 }
 
+// 清理生成内容中无意义的空 ** 标记、多余空行，确保 Markdown 格式可用
+function cleanGeneratedMarkdown(text: string): string {
+  return text
+    .replace(/\*\*\s*\*\*/g, '')
+    .replace(/\*\*\s*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export function generateMockContent(
   type: ResourceType,
   topic: string,
@@ -57,20 +66,27 @@ export function generateMockContent(
   const difficulty = kb >= 75 ? '高阶' : kb >= 50 ? '进阶' : '入门';
   const style = styleLabel(profile);
 
+  let raw = '';
   switch (type) {
     case 'doc':
-      return generateDoc(topic, difficulty, style, profile);
+      raw = generateDoc(topic, difficulty, style, profile);
+      break;
     case 'mindmap':
-      return generateMindmap(topic, profile);
+      raw = generateMindmap(topic, profile);
+      break;
     case 'quiz':
-      return generateQuiz(topic, difficulty, profile);
+      raw = generateQuiz(topic, difficulty, profile);
+      break;
     case 'code':
-      return generateCode(topic, difficulty, profile);
+      raw = generateCode(topic, difficulty, profile);
+      break;
     case 'reading':
-      return generateReading(topic, profile);
+      raw = generateReading(topic, profile);
+      break;
     default:
-      return `# ${topic}\n\n生成内容。`;
+      raw = `# ${topic}\n\n生成内容。`;
   }
+  return cleanGeneratedMarkdown(raw);
 }
 
 // ============ 讲解文档 ============
