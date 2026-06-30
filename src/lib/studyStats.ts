@@ -85,20 +85,20 @@ export function computeDailyLearnedCount(activities: StudyActivity[]): number {
   ).length;
 }
 
-// 学习健康度：<10 项时随学习数增长，>10 项时下降，最低 10
+// 学习健康度：24小时学习项数重置时回归 60；<10 项时随学习数增长，>10 项时下降，最低 10
 export function computeHealthScore(
   activities: StudyActivity[],
   learnedCount: number
 ): number {
-  // 基础分 70
-  let score = 70;
+  // 基础分 60（24 小时学习项数重置为 0 时健康度回归到此基线）
+  let score = 60;
   // 活跃天数加成（每天 +3，上限 +15）
   const activeDays = computeActiveDays(activities);
   score += Math.min(15, activeDays * 3);
   // 答题活动加成（每次 +2，上限 +10）
   const quizCount = activities.filter((a) => a.type === 'quiz').length;
   score += Math.min(10, quizCount * 2);
-  // 24小时内连续学习项数（每24小时自动重置）
+  // 24小时内连续学习项数（每24小时自动重置，归零时健康度回到基线 60）
   const dailyLearned = computeDailyLearnedCount(activities);
   if (dailyLearned <= 10) {
     // <10 项时随学习数增长，每项 +3，上限 +30
