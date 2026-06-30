@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 import { fileURLToPath, URL } from 'node:url';
+import { readFileSync, rmSync, readdirSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -59,6 +61,16 @@ export default defineConfig({
             // 使用替换函数，避免 inlineScript 中的 $&/$`/$'/$n 被当作特殊替换模式解析
             html = html.replace(/<\/body>/, () => `${inlineScript}\n</body>`);
           }
+          // 内联 favicon，避免 file:// 协议下发起外部 SVG 请求
+          html = html.replace(/<link[^>]*rel="icon"[^>]*href="\.\/favicon\.svg"[^>]*>/, () => {
+            try {
+              const svg = readFileSync(resolve('public', 'favicon.svg'), 'utf8');
+              const base64 = Buffer.from(svg).toString('base64');
+              return `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,${base64}" />`;
+            } catch {
+              return '';
+            }
+          });
           // 若仍有外部资源引用，构建失败以便及时发现
           const remaining = [
             ...html.matchAll(/<script[^>]*src="([^"]+)"[^>]*>/g),
@@ -70,6 +82,26 @@ export default defineConfig({
           }
           return html;
         },
+      },
+      writeBundle() {
+        // 内联完成后删除 dist/assets 与未引用的 favicon.svg，只保留单一的 index.html
+        try {
+          const distPath = resolve('dist');
+          const assetsPath = resolve(distPath, 'assets');
+          if (statSync(assetsPath).isDirectory()) {
+            rmSync(assetsPath, { recursive: true, force: true });
+          }
+          const faviconPath = resolve(distPath, 'favicon.svg');
+          try {
+            if (statSync(faviconPath).isFile()) {
+              rmSync(faviconPath, { force: true });
+            }
+          } catch {
+            // ignore missing favicon
+          }
+        } catch {
+          // ignore missing dist/assets
+        }
       },
     },
   ],
