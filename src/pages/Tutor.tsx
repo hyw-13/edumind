@@ -6,6 +6,8 @@ import {
   initialTutorMessages, tutorSuggestions, tutorReplyMap,
   type ChatMessage,
 } from '@/data/mockData';
+import { findKnowledgePoint } from '@/data/knowledgeBase';
+import { recommend } from '@/lib/recommender';
 import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +53,77 @@ function canEffectivelyAnswer(text: string): boolean {
 // 无法回答时的致歉回复
 const apologyReply = `抱歉，我目前无法就这个问题给出有效回答。\n\n作为「智学伴」的答疑智能体，我主要基于**《人工智能导论》课程知识库**进行检索与解答，覆盖以下范围：\n\n- 人工智能基础概念（三大流派、发展历史）\n- 搜索算法（BFS、DFS、UCS、A*）\n- 机器学习（决策树、SVM、集成方法）\n- 深度学习（神经网络、CNN、RNN、Transformer）\n- 自然语言处理与大模型（注意力、预训练、微调）\n- 知识表示与推理（知识图谱、逻辑）\n\n你可以尝试：\n1. 重新组织问题，使用更明确的 AI 相关术语\n2. 点击下方推荐问题快速体验\n3. 前往「资源中心」查看结构化学习材料\n\n> 提示：我的知识来源于课程知识库，超出课程范围的问题可能无法准确回答。`;
 
+// 基于知识库检索生成回复（RAG）：当问题不在预设回复中时调用
+// 若检索结果为空（total === 0）返回 null，由调用方回退到 apologyReply（防幻觉）
+function generateKnowledgeReply(text: string): string | null {
+  const result = recommend(text);
+  if (result.total === 0) return null;
+
+  const sections: string[] = [];
+
+  // ===== 知识检索 =====
+  let kbBody = '## 知识检索\n\n';
+  if (result.knowledge.length > 0) {
+    const top = result.knowledge[0];
+    const pt = findKnowledgePoint(top.id);
+    kbBody += `针对你的问题「${text}」，基于课程知识库检索到 **${result.knowledge.length} 个相关知识点**，最相关的是：\n\n### ${top.title}\n\n`;
+    kbBody += `> ${top.summary}\n\n`;
+    if (pt && pt.detail) {
+      // 截取 detail 前 600 字作为摘要，避免回复过长
+      const detailSnippet = pt.detail.length > 600
+        ? pt.detail.slice(0, 600) + '…'
+        : pt.detail;
+      kbBody += detailSnippet + '\n\n';
+    }
+    if (top.meta) kbBody += `*所属章节：${top.meta}*\n\n`;
+    // 列出其他相关知识点标题
+    if (result.knowledge.length > 1) {
+      kbBody += '**其他相关知识点：**\n';
+      result.knowledge.slice(1, 4).forEach((k, i) => {
+        kbBody += `${i + 1}. ${k.title} — ${k.summary}\n`;
+      });
+      kbBody += '\n';
+    }
+  } else {
+    // 没有知识点命中但有其他资源命中
+    kbBody += `针对你的问题「${text}」，知识库中暂无完全匹配的知识点，但检索到以下相关学习资源，建议结合资源深入学习。\n\n`;
+  }
+  sections.push(kbBody);
+
+  // ===== 推荐资源 =====
+  if (result.resources.length > 0) {
+    let resBody = '## 推荐资源\n\n';
+    result.resources.slice(0, 3).forEach((r, i) => {
+      resBody += `${i + 1}. [${r.title}](${r.link}) — ${r.summary}\n`;
+    });
+    resBody += '\n';
+    sections.push(resBody);
+  }
+
+  // ===== 学习建议 =====
+  let adviceBody = '## 学习建议\n\n';
+  const advice: string[] = [];
+  if (result.knowledge.length > 0 && result.knowledge[0].meta) {
+    advice.push(`建议重点学习 **${result.knowledge[0].meta}** 章节，系统掌握「${result.knowledge[0].title}」相关内容。`);
+  }
+  if (result.paths.length > 0) {
+    advice.push(`结合学习路径中的「${result.paths[0].title}」节点（${result.paths[0].meta}）巩固知识。`);
+  }
+  if (result.resources.length > 0) {
+    advice.push(`配合「${result.resources[0].title}」练习题/文档巩固，边学边练效果更佳。`);
+  }
+  if (result.questions.length > 0) {
+    advice.push(`可继续追问相关问题：「${result.questions[0].title}」拓展理解。`);
+  }
+  if (advice.length === 0) {
+    advice.push('建议从基础概念入手，逐步深入原理推导与代码实现。');
+  }
+  adviceBody += advice.map((a, i) => `${i + 1}. ${a}`).join('\n') + '\n';
+  sections.push(adviceBody);
+
+  return sections.join('\n');
+}
+
 export default function Tutor() {
   const [messages, setMessages] = useState<Msg[]>(initialTutorMessages);
   const [input, setInput] = useState('');
@@ -76,9 +149,13 @@ export default function Tutor() {
     // 记录答疑提问到全局 store（影响画像与推荐）
     recordTutorQuestion(text, canEffectivelyAnswer(text));
 
-    const reply = tutorReplyMap[text] ?? (canEffectivelyAnswer(text)
-      ? `针对你的问题「${text}」，基于课程知识库检索，我整理了以下要点：\n\n## 解析\n\n该问题涉及核心概念的辨析与应用。建议从基本定义出发，理解其数学本质，再结合代码实例验证。\n\n### 关键点\n1. 概念定义与适用场景\n2. 数学推导与公式\n3. 代码实现示例\n\n> 提示：你可以结合资源中心的「讲解文档」与「代码案例」进一步巩固。`
-      : apologyReply);
+    // 当问题在预设回复中时直接使用；否则接入知识库检索（RAG），
+    // 检索为空（total === 0）时回退到 apologyReply（防幻觉）
+    let reply = tutorReplyMap[text];
+    if (!reply) {
+      const kbReply = generateKnowledgeReply(text);
+      reply = kbReply ?? apologyReply;
+    }
 
     let pos = 0;
     const chunkSize = 3;
