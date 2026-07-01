@@ -671,8 +671,8 @@ function QuizPlayer({ quiz }: { quiz: Quiz }) {
         />
       </div>
 
-      {/* 题目卡片 */}
-      <div className="rounded-2xl border border-line bg-white p-5 shadow-soft">
+      {/* 题目卡片：固定最小高度，采用 flex 布局稳定操作区位置 */}
+      <div className="flex min-h-[520px] flex-col rounded-2xl border border-line bg-white p-5 shadow-soft">
         {/* 题头 */}
         <div className="mb-3 flex items-center gap-2">
           <span className="font-display text-sm font-semibold text-ink-faint">第 {currentIdx + 1} 题</span>
@@ -687,11 +687,13 @@ function QuizPlayer({ quiz }: { quiz: Quiz }) {
           )}
         </div>
 
-        {/* 题干 */}
-        <p className="mb-4 text-[15px] font-medium leading-relaxed text-ink">{question.question}</p>
+        {/* 题干：限制最大高度，超出滚动，避免切换题目时整体高度大幅变化 */}
+        <div className="mb-4 max-h-[120px] overflow-y-auto">
+          <p className="text-[15px] font-medium leading-relaxed text-ink">{question.question}</p>
+        </div>
 
-        {/* 选项 */}
-        <div className="space-y-2">
+        {/* 选项：保留最小高度，避免选项数量不同导致操作区上下跳动 */}
+        <div className="min-h-[180px] space-y-2">
           {question.options.map((opt, idx) => {
             const isSelected = selected.includes(idx);
             const isCorrectOpt = question.answer.includes(idx);
@@ -736,36 +738,42 @@ function QuizPlayer({ quiz }: { quiz: Quiz }) {
           })}
         </div>
 
-        {/* 提交后：对错提示 + 解析 */}
-        {submitted && (
-          <div className={cn('mt-4 rounded-xl border p-4 animate-fade-up', correct ? 'border-emerald-200 bg-emerald-50/60' : 'border-rose-200 bg-rose-50/60')}>
-            <div className="flex items-center gap-2">
-              {correct ? (
-                <><CheckCircle2 size={16} className="text-emerald-600" /><span className="text-sm font-semibold text-emerald-700">回答正确</span></>
-              ) : (
-                <><X size={16} className="text-rose" /><span className="text-sm font-semibold text-rose">回答错误</span></>
-              )}
-              {!correct && (
-                <span className="text-xs text-ink-muted">
-                  正确答案：{question.answer.map((i) => String.fromCharCode(65 + i)).join('、')}
-                </span>
-              )}
-            </div>
-            <div className="mt-2 border-t border-current/10 pt-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">解析</div>
-              <p className="mt-1 text-sm leading-relaxed text-ink-soft">{question.explanation}</p>
-              {question.knowledgePoint && (
-                <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-0.5 text-[11px] text-ink-muted">
-                  <Icon name="Tag" size={11} /> {question.knowledgePoint}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+        {/* 解析：始终保留占位高度，提交后显示内容，避免提交/切题时操作区跳动 */}
+        <div
+          className={cn(
+            'mt-4 min-h-[110px] rounded-xl border p-4',
+            submitted ? (correct ? 'border-emerald-200 bg-emerald-50/60 animate-fade-up' : 'border-rose-200 bg-rose-50/60 animate-fade-up') : 'border-transparent bg-transparent'
+          )}
+        >
+          {submitted && (
+            <>
+              <div className="flex items-center gap-2">
+                {correct ? (
+                  <><CheckCircle2 size={16} className="text-emerald-600" /><span className="text-sm font-semibold text-emerald-700">回答正确</span></>
+                ) : (
+                  <><X size={16} className="text-rose" /><span className="text-sm font-semibold text-rose">回答错误</span></>
+                )}
+                {!correct && (
+                  <span className="text-xs text-ink-muted">
+                    正确答案：{question.answer.map((i) => String.fromCharCode(65 + i)).join('、')}
+                  </span>
+                )}
+              </div>
+              <div className="mt-2 border-t border-current/10 pt-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">解析</div>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{question.explanation}</p>
+                {question.knowledgePoint && (
+                  <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-0.5 text-[11px] text-ink-muted">
+                    <Icon name="Tag" size={11} /> {question.knowledgePoint}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
-      {/* 操作区 */}
-      <div className="mt-4 flex items-center justify-between">
+      {/* 操作区：放在卡片内部，使用 mt-auto 稳定在卡片底部 */}
+      <div className="mt-auto flex items-center justify-between border-t border-line pt-4">
         <button
           onClick={handlePrev}
           disabled={currentIdx === 0}
@@ -817,5 +825,6 @@ function QuizPlayer({ quiz }: { quiz: Quiz }) {
         )}
       </div>
     </div>
+  </div>
   );
 }
